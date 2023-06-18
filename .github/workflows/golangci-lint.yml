@@ -19,9 +19,13 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.53
-          args: --timeout=15m --out-format json > linter-result.json
+          args: --timeout=15m --out-format json > linter-results.json
+
+      - name: Move Linter results
+        run: cp linter-results.json ${{ github.workspace }}/linter-results.json
+
       - name: Upload Linter results
         uses: actions/upload-artifact@v2
         with:
           name: linter-results
-          path: linter-result.json
+          path: linter-results.json
