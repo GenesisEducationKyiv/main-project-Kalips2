@@ -12,7 +12,7 @@ type Config struct {
 	CurrencyTo           string
 	EmailStoragePath     string
 	EmailServiceHost     string
-	EmailServicePort     int
+	EmailServicePort     string
 	EmailServiceSubject  string
 	EmailServiceFrom     string
 	EmailServicePassword string
