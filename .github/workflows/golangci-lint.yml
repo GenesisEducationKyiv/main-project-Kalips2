@@ -20,3 +20,8 @@ jobs:
         with:
           version: v1.53
           args: --timeout=15m
+      - name: Upload Linter results
+        uses: actions/upload-artifact@v2
+        with:
+          name: linter-results
+          path: ${{ steps.linter.outputs.output }}
