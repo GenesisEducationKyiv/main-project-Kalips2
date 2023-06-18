@@ -25,11 +25,13 @@ docker build -t btc-app .
 docker run -p 8080:8080 btc-app
 ```
 ## Architecture
-* **Config** -  Create the configuration that contain all needed variables (parameters) for application.
-* **Server** -  Create new server responsible for routing.
-* **Handler**  - Contain handlers for HTTP requests, send the required parameters to the appropriate service, and return a response to the user.
-* **Repository** - Provide data persistence for subscriptions. In this implementation, a CSV file is used as a storage mechanism.
-* **Service** - Contain the core business logic of the application, such as fetching the current rate and managing subscriptions.
+* **Handlers**  - handle HTTP requests, send the required parameters to the appropriate service, and return a response to the user. Define the API endpoints.
+* **Services** - Contain the core business logic of the application, such as fetching the current rate and managing subscriptions.
+* **Repositories** - Provide data persistence for subscriptions. In this implementation, a CSV file is used as a storage mechanism.
+* **Utils** -  Include utility functions and helpers, such as email validation and constants.
 
 For getting current rate API from https://min-api.cryptocompare.com/ is used.
 If the type of currency is wanted to be changed you get replace default currency (BTC, UAH) in the constants file to what you need.
+
+
+ 
