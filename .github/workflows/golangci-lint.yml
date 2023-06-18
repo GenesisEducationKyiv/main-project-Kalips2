@@ -1,0 +1,22 @@
+name: Linter
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.20
+          cache: go-cache
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3.6.0
+        with:
+          version: v1.53.0
+          args: --config .golangci.yml
