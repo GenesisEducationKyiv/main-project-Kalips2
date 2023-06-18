@@ -22,9 +22,11 @@ jobs:
           args: --timeout=15m --out-format json > linter-results.json
 
       - name: Move Linter results
+        continue-on-error: true
         run: cp linter-results.json ${{ github.workspace }}/linter-results.json
 
       - name: Upload Linter results
+        continue-on-error: true
         uses: actions/upload-artifact@v2
         with:
           name: linter-results
