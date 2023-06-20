@@ -3,7 +3,9 @@ package server
 import (
 	"btc-app/config"
 	"btc-app/handler"
+	"fmt"
 	"github.com/go-chi/chi"
+	"log"
 	"net/http"
 )
 
@@ -19,7 +21,7 @@ func NewServer(conf config.Config) *Server {
 	}
 }
 
-func (s *Server) InitHandlers() {
+func (s *Server) InitHandlers(c *config.Config) {
 	s.Router.Get("/rate", func(w http.ResponseWriter, r *http.Request) {
 		handler.GetCurrentRateHandler(w, r, &s.Config)
 	})
@@ -31,5 +33,9 @@ func (s *Server) InitHandlers() {
 	s.Router.Post("/sendEmails", func(w http.ResponseWriter, r *http.Request) {
 		handler.SendToEmailsHandler(w, r, &s.Config)
 	})
-	_ = http.ListenAndServe(":8080", s.Router)
+
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Port), s.Router); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Port), err)
+	}
+
 }

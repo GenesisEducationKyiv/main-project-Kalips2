@@ -9,7 +9,7 @@ import (
 
 func SendToEmailsHandler(w http.ResponseWriter, r *http.Request, c *config.Config) {
 	if err := service.SendRateToEmails(c); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Emails have been sent.")
@@ -23,7 +23,7 @@ func SubscribeEmailHandler(w http.ResponseWriter, r *http.Request, c *config.Con
 		http.Error(w, err.Error(), http.StatusConflict)
 	} else {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Emails have been added.")
+		fmt.Fprintf(w, "Emails have been subscribed.")
 	}
 
 }

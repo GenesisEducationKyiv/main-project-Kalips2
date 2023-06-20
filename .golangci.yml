@@ -1,9 +1,8 @@
-linters-settings:
-  errname:
-    enabled: true
-  dupl:
-    enabled: true
-  goconst:
-    enabled: true
-  gomnd:
-    enabled: true
+linters:
+  enable:
+    - errname
+    - dupl
+    - goconst
+    - gomnd
+    - whitespace
+    - gofumpt

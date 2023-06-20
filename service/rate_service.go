@@ -3,6 +3,7 @@ package service
 import (
 	"btc-app/config"
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -17,7 +18,7 @@ func GetCurrentRate(c *config.Config) (float64, error) {
 	var err error
 	var rate float64
 
-	url := c.CryptoApiURL + "?fsym=" + c.CurrencyFrom + "&tsyms=" + c.CurrencyTo
+	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", c.CryptoApiURL, c.CurrencyFrom, c.CurrencyTo)
 	if resp, err = http.Get(url); err != nil {
 		return 0, errors.Wrap(err, failToGetRateMessage)
 	}

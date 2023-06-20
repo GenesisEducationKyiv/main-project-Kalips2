@@ -8,6 +8,7 @@ import (
 	"github.com/go-gomail/gomail"
 	"github.com/pkg/errors"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -84,11 +85,12 @@ func setUpMessageToSend(rate float64, c *config.Config) (*gomail.Dialer, *gomail
 
 func sendMessageToEmails(message *gomail.Message, emails []string, dialer *gomail.Dialer) error {
 	var err error
+	var failedEmails []string
 	for _, email := range emails {
 		message.SetHeader("To", email)
 		if err = dialer.DialAndSend(message); err != nil {
-			continue
+			failedEmails = append(failedEmails, email)
 		}
 	}
-	return err
+	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, " "))
 }

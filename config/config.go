@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -12,7 +13,7 @@ type Config struct {
 	CurrencyTo           string
 	EmailStoragePath     string
 	EmailServiceHost     string
-	EmailServicePort     string
+	EmailServicePort     int
 	EmailServiceSubject  string
 	EmailServiceFrom     string
 	EmailServicePassword string
@@ -23,18 +24,26 @@ type varToField struct {
 	field   interface{}
 }
 
-func (c *Config) InitConfigFromEnv() {
+func (c *Config) InitConfigFromEnv() error {
 	requiredEnvVars := initRequiredVars(c)
 
 	for _, envVar := range requiredEnvVars {
 		value := os.Getenv(envVar.varName)
+		if value == "" {
+			return fmt.Errorf("environment variable %s is not set", envVar.varName)
+		}
 		switch field := envVar.field.(type) {
 		case *int:
-			*field, _ = strconv.Atoi(value)
+			parsedInt, err := strconv.Atoi(value)
+			if err != nil {
+				return fmt.Errorf("failed to convert %s to int: %w", value, err)
+			}
+			*field = parsedInt
 		case *string:
 			*field = value
 		}
 	}
+	return nil
 }
 
 func initRequiredVars(c *Config) []varToField {

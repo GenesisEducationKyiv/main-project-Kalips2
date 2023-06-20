@@ -8,6 +8,7 @@ import (
 
 var (
 	failToSaveEmailMessage = "Failed to subscribe email"
+	failToGetEmailsMessage = "Failed to get emails from storage"
 )
 
 func SaveEmailToStorage(email string, pathToStorage string) error {
@@ -19,12 +20,12 @@ func SaveEmailToStorage(email string, pathToStorage string) error {
 
 	file, err = setUpConnectionWithStorage(pathToStorage)
 	if err != nil {
-		return errors.New(failToSaveEmailMessage + err.Error())
+		return errors.Wrap(err, failToSaveEmailMessage)
 	}
 
 	err = writeToStorage(email, file)
 	if err != nil {
-		return errors.New(failToSaveEmailMessage + err.Error())
+		return errors.Wrap(err, failToSaveEmailMessage)
 	}
 	return err
 }
@@ -36,12 +37,12 @@ func GetEmailsFromStorage(pathToStorage string) ([]string, error) {
 
 	file, err = setUpConnectionWithStorage(pathToStorage)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.Wrap(err, failToGetEmailsMessage)
 	}
 
 	emails, err = readFromStorage(file)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.Wrap(err, failToGetEmailsMessage)
 	}
 	return emails, err
 }
