@@ -37,5 +37,4 @@ func (s *Server) InitHandlers(c *config.Config) {
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Port), s.Router); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Port), err)
 	}
-
 }

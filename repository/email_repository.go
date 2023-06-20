@@ -9,6 +9,7 @@ import (
 var (
 	failToSaveEmailMessage = "Failed to subscribe email"
 	failToGetEmailsMessage = "Failed to get emails from storage"
+	permToOpenTheStorage   = 0644
 )
 
 func SaveEmailToStorage(email string, pathToStorage string) error {
@@ -74,7 +75,7 @@ func readFromStorage(storage *os.File) ([]string, error) {
 }
 
 func setUpConnectionWithStorage(pathToStorage string) (*os.File, error) {
-	storage, err := os.OpenFile(pathToStorage, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
+	storage, err := os.OpenFile(pathToStorage, os.O_RDWR|os.O_APPEND|os.O_CREATE, os.FileMode(permToOpenTheStorage))
 	if err != nil {
 		return nil, errors.New("Failed to set up connection with storage")
 	}

@@ -25,5 +25,4 @@ func SubscribeEmailHandler(w http.ResponseWriter, r *http.Request, c *config.Con
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Emails have been subscribed.")
 	}
-
 }
