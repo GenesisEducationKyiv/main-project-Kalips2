@@ -13,6 +13,6 @@ func GetCurrentRateHandler(w http.ResponseWriter, r *http.Request, c *config.Con
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else {
 		rateStr := strconv.FormatFloat(rate, 'f', 5, 64)
-		fmt.Fprintf(w, rateStr)
+		fmt.Fprint(w, rateStr)
 	}
 }

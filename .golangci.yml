@@ -5,4 +5,3 @@ linters:
     - goconst
     - gomnd
     - whitespace
-    - gofumpt

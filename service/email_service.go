@@ -72,7 +72,7 @@ func validateEmail(email string) error {
 }
 
 func setUpMessageToSend(rate float64, c *config.Config) (*gomail.Dialer, *gomail.Message) {
-	dialer := gomail.NewDialer("smtp.gmail.com", 587, c.EmailServiceFrom, c.EmailServicePassword)
+	dialer := gomail.NewDialer(c.EmailServiceHost, c.EmailServicePort, c.EmailServiceFrom, c.EmailServicePassword)
 	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	message := gomail.NewMessage()
