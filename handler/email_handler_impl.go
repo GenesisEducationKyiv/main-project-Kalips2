@@ -7,27 +7,43 @@ import (
 	"net/http"
 )
 
-type EmailService interface {
-	SendRateToEmails(c *config.Config) error
-	SubscribeEmail(email string, c *config.Config) error
+type EmailHandlerImpl struct {
+	conf         *config.Config
+	emailService EmailService
 }
 
-func SendToEmailsHandler(w http.ResponseWriter, r *http.Request, c *config.Config) {
-	if err := service.SendRateToEmails(c); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Emails have been sent.")
+type EmailService interface {
+	SendRateToEmails() error
+	SubscribeEmail(email string) error
+}
+
+func (emailHr EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := emailHr.emailService.SendRateToEmails(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "Emails have been sent.")
+		}
 	}
 }
 
-func SubscribeEmailHandler(w http.ResponseWriter, r *http.Request, c *config.Config) {
-	email := r.FormValue("email")
+func (emailHr EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		email := r.FormValue("email")
 
-	if err := service.SubscribeEmail(email, c); err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Emails have been subscribed.")
+		if err := emailHr.emailService.SubscribeEmail(email); err != nil {
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "Emails have been subscribed.")
+		}
+	}
+}
+
+func NewEmailHandler(c *config.Config) *EmailHandlerImpl {
+	return &EmailHandlerImpl{
+		emailService: service.NewEmailService(c),
+		conf:         c,
 	}
 }

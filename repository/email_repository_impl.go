@@ -12,14 +12,18 @@ var (
 	permToOpenTheStorage   = 0644
 )
 
-func SaveEmailToStorage(email string, pathToStorage string) error {
+type EmailRepositoryImpl struct {
+	pathToStorage string
+}
+
+func (repo EmailRepositoryImpl) SaveEmailToStorage(email string) error {
 	var err error
 	var file *os.File
 	defer func(file *os.File) {
 		err = file.Close()
 	}(file)
 
-	file, err = setUpConnectionWithStorage(pathToStorage)
+	file, err = setUpConnectionWithStorage(repo.pathToStorage)
 	if err != nil {
 		return errors.Wrap(err, failToSaveEmailMessage)
 	}
@@ -31,12 +35,12 @@ func SaveEmailToStorage(email string, pathToStorage string) error {
 	return err
 }
 
-func GetEmailsFromStorage(pathToStorage string) ([]string, error) {
+func (repo EmailRepositoryImpl) GetEmailsFromStorage() ([]string, error) {
 	var file *os.File
 	var err error
 	var emails []string
 
-	file, err = setUpConnectionWithStorage(pathToStorage)
+	file, err = setUpConnectionWithStorage(repo.pathToStorage)
 	if err != nil {
 		return nil, errors.Wrap(err, failToGetEmailsMessage)
 	}
@@ -82,9 +86,9 @@ func setUpConnectionWithStorage(pathToStorage string) (*os.File, error) {
 	return storage, err
 }
 
-func CheckEmailIsExist(email string, pathToStorage string) (bool, error) {
+func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	var err error
-	emails, err := GetEmailsFromStorage(pathToStorage)
+	emails, err := repo.GetEmailsFromStorage()
 	if err != nil {
 		return false, errors.Wrap(err, "Failed to check the existence of email")
 	}
@@ -95,4 +99,10 @@ func CheckEmailIsExist(email string, pathToStorage string) (bool, error) {
 		}
 	}
 	return false, err
+}
+
+func NewEmailRepository(pathToStorage string) EmailRepositoryImpl {
+	return EmailRepositoryImpl{
+		pathToStorage: pathToStorage,
+	}
 }

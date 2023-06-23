@@ -18,11 +18,21 @@ var (
 	failToSubscribeMessage      = "Failed to subscribe email"
 )
 
-func SendRateToEmails(c *config.Config) error {
+type EmailServiceImpl struct {
+	conf            *config.Config
+	emailRepository EmailRepository
+}
+
+type EmailRepository interface {
+	SaveEmailToStorage(email string) error
+	GetEmailsFromStorage() ([]string, error)
+}
+
+func (emailService EmailServiceImpl) SendRateToEmails() error {
 	var emails []string
 	var err error
 
-	emails, err = repository.GetEmailsFromStorage(c.EmailStoragePath)
+	emails, err = emailService.emailRepository.GetEmailsFromStorage()
 	if err != nil {
 		return errors.Wrap(err, failToSendRateMessage)
 	}
@@ -32,7 +42,7 @@ func SendRateToEmails(c *config.Config) error {
 		return errors.Wrap(err, failToSendRateMessage)
 	}
 
-	dialer, message := setUpMessageToSend(rate, c)
+	dialer, message := setUpMessageToSend(rate, emailService.conf)
 	err = sendMessageToEmails(message, emails, dialer)
 	if err != nil {
 		return errors.Wrap(err, failToSendRateMessage)
@@ -40,7 +50,7 @@ func SendRateToEmails(c *config.Config) error {
 	return err
 }
 
-func SubscribeEmail(email string, c *config.Config) error {
+func (emailService EmailServiceImpl) SubscribeEmail(email string) error {
 	var err error
 
 	err = validateEmail(email)
@@ -93,4 +103,10 @@ func sendMessageToEmails(message *gomail.Message, emails []string, dialer *gomai
 		}
 	}
 	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, " "))
+}
+func NewEmailService(c *config.Config) EmailServiceImpl {
+	return EmailServiceImpl{
+		conf:            c,
+		emailRepository: repository.NewEmailRepository(c.EmailStoragePath),
+	}
 }
