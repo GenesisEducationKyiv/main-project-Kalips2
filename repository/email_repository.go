@@ -13,9 +13,7 @@ var (
 )
 
 func SaveEmailToStorage(email string, pathToStorage string) error {
-	var err error
-
-	err = writeToStorage(email, pathToStorage)
+	err := writeToStorage(email, pathToStorage)
 	if err != nil {
 		return errors.Wrap(err, failToSubscribeEmailMessage)
 	}
@@ -23,10 +21,7 @@ func SaveEmailToStorage(email string, pathToStorage string) error {
 }
 
 func GetEmailsFromStorage(pathToStorage string) ([]string, error) {
-	var err error
-	var emails []string
-
-	emails, err = readFromStorage(pathToStorage)
+	emails, err := readFromStorage(pathToStorage)
 	if err != nil {
 		return nil, errors.Wrap(err, failToReadStorageMessage)
 	}
