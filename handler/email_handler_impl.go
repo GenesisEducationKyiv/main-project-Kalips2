@@ -7,6 +7,11 @@ import (
 	"net/http"
 )
 
+type EmailService interface {
+	SendRateToEmails(c *config.Config) error
+	SubscribeEmail(email string, c *config.Config) error
+}
+
 func SendToEmailsHandler(w http.ResponseWriter, r *http.Request, c *config.Config) {
 	if err := service.SendRateToEmails(c); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
