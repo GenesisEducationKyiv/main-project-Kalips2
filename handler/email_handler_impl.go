@@ -9,15 +9,10 @@ import (
 
 type EmailHandlerImpl struct {
 	conf         *config.Config
-	emailService EmailService
+	emailService service.EmailService
 }
 
-type EmailService interface {
-	SendRateToEmails() error
-	SubscribeEmail(email string) error
-}
-
-func (emailHr EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
+func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := emailHr.emailService.SendRateToEmails(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -28,7 +23,7 @@ func (emailHr EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 	}
 }
 
-func (emailHr EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
+func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 

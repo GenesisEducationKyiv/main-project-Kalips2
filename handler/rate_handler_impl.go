@@ -10,11 +10,7 @@ import (
 
 type RateHandlerImpl struct {
 	conf        *config.Config
-	rateService RateService
-}
-
-type RateService interface {
-	GetCurrentRate() (float64, error)
+	rateService service.RateService
 }
 
 func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {

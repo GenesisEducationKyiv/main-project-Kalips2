@@ -13,6 +13,10 @@ var (
 	failToGetRateMessage = "Failed get current rate"
 )
 
+type RateService interface {
+	GetCurrentRate() (float64, error)
+}
+
 type RateServiceImpl struct {
 	conf *config.Config
 }
@@ -22,7 +26,8 @@ func (rateService RateServiceImpl) GetCurrentRate() (float64, error) {
 	var err error
 	var rate float64
 
-	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", rateService.conf.CryptoApiURL, rateService.conf.CurrencyFrom, rateService.conf.CurrencyTo)
+	conf := rateService.conf
+	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", conf.CryptoApiURL, conf.CurrencyFrom, conf.CurrencyTo)
 	if resp, err = http.Get(url); err != nil {
 		return 0, errors.Wrap(err, failToGetRateMessage)
 	}
@@ -51,8 +56,8 @@ func getRateFromHttpResponse(resp *http.Response) (float64, error) {
 	return rate, err
 }
 
-func NewRateService(c *config.Config) RateServiceImpl {
-	return RateServiceImpl{
+func NewRateService(c *config.Config) *RateServiceImpl {
+	return &RateServiceImpl{
 		conf: c,
 	}
 }
