@@ -26,11 +26,8 @@ func (repo EmailRepositoryImpl) SaveEmailToStorage(email string) error {
 	return err
 }
 
-func (repo EmailRepositoryImpl) GetEmailsFromStorage() ([]string, error) {
-	var err error
-	var emails []string
-
-	emails, err = readFromStorage(pathToStorage)
+func GetEmailsFromStorage(pathToStorage string) ([]string, error) {
+	emails, err := readFromStorage(pathToStorage)
 	if err != nil {
 		return nil, errors.Wrap(err, failToReadStorageMessage)
 	}
