@@ -3,6 +3,7 @@ package handler
 import (
 	"btc-app/config"
 	"btc-app/service"
+	"btc-app/template/message"
 	"fmt"
 	"net/http"
 )
@@ -18,7 +19,7 @@ func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, "Emails have been sent.")
+			fmt.Fprintf(w, message.EmailSubscribed)
 		}
 	}
 }
@@ -31,7 +32,7 @@ func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, "Emails have been subscribed.")
+			fmt.Fprintf(w, message.EmailsWereSent)
 		}
 	}
 }

@@ -3,17 +3,13 @@ package service
 import (
 	"btc-app/config"
 	"btc-app/repository"
+	"btc-app/template/exception"
 	"github.com/pkg/errors"
 	"regexp"
 	"strconv"
 )
 
-var (
-	emailRegex                  = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	ErrEmailIsAlreadySubscribed = errors.New("Email is already subscribed!")
-	failToSendRateMessage       = "Failed to send the rate to emails"
-	failToSubscribeMessage      = "Failed to subscribe email"
-)
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 type EmailService interface {
 	SendRateToEmails() error
@@ -34,21 +30,21 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 
 	emails, err = emailService.emailRepository.GetEmailsFromStorage()
 	if err != nil {
-		return errors.Wrap(err, failToSendRateMessage)
+		return errors.Wrap(err, exception.FailToSendRateMessage)
 	}
 
 	rate, err := emailService.rateService.GetCurrentRate()
 	if err != nil {
-		return errors.Wrap(err, failToSendRateMessage)
+		return errors.Wrap(err, exception.FailToSendRateMessage)
 	}
 
 	rateFormatted := strconv.FormatFloat(rate, 'f', 5, 64)
-	emailSubject := "Поточний курс " + conf.CurrencyFrom + " до " + conf.CurrencyTo + ": " + rateFormatted + "."
+	emailSubject := "Поточний курс " + conf.CurrencyFrom + " до " + conf.CurrencyTo + "."
 	message := emailService.emailSender.CreateMessage(conf.EmailServiceFrom, emailSubject, rateFormatted)
 
 	err = emailService.emailSender.SendMessageTo(message, emails)
 	if err != nil {
-		return errors.Wrap(err, failToSendRateMessage)
+		return errors.Wrap(err, exception.FailToSendRateMessage)
 	}
 	return err
 }
@@ -58,20 +54,20 @@ func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
 
 	err = validateEmail(email)
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeMessage)
+		return errors.Wrap(err, exception.FailToSubscribeMessage)
 	}
 
 	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
-		err = ErrEmailIsAlreadySubscribed
+		err = exception.EmailIsAlreadySubscribed
 	}
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeMessage)
+		return errors.Wrap(err, exception.FailToSubscribeMessage)
 	}
 
 	err = emailService.emailRepository.SaveEmailToStorage(email)
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeMessage)
+		return errors.Wrap(err, exception.FailToSubscribeMessage)
 	}
 	return err
 }
@@ -82,6 +78,18 @@ func validateEmail(email string) error {
 		err = errors.New("Email doesn't match regex: " + emailRegex.String())
 	}
 	return err
+}
+
+func (emailService *EmailServiceImpl) SetEmailRepository(repo repository.EmailRepository) {
+	emailService.emailRepository = repo
+}
+
+func (emailService *EmailServiceImpl) SetEmailSender(sender GoMailSender) {
+	emailService.emailSender = sender
+}
+
+func (emailService *EmailServiceImpl) SetRateService(rateService RateService) {
+	emailService.rateService = rateService
 }
 
 func NewEmailService(c *config.Config) *EmailServiceImpl {

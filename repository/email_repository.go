@@ -1,16 +1,13 @@
 package repository
 
 import (
+	"btc-app/template/exception"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"os"
 )
 
-var (
-	failToSubscribeEmailMessage = "Failed to subscribe email"
-	failToReadStorageMessage    = "Failed to read from storage"
-	permToOpenTheStorage        = 0644
-)
+var permToOpenTheStorage = 0644
 
 type EmailRepository interface {
 	SaveEmailToStorage(email string) error
@@ -23,17 +20,17 @@ type EmailRepositoryImpl struct {
 }
 
 func (repo *EmailRepositoryImpl) SaveEmailToStorage(email string) error {
-	err := writeToStorage(email, repo.pathToStorage)
+	err := WriteToStorage(email, repo.pathToStorage)
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeEmailMessage)
+		return errors.Wrap(err, exception.FailToAddEmailToStorageMessage)
 	}
 	return err
 }
 
 func (repo *EmailRepositoryImpl) GetEmailsFromStorage() ([]string, error) {
-	emails, err := readFromStorage(repo.pathToStorage)
+	emails, err := ReadFromStorage(repo.pathToStorage)
 	if err != nil {
-		return nil, errors.Wrap(err, failToReadStorageMessage)
+		return nil, errors.Wrap(err, exception.FailToGetEmailsMessage)
 	}
 	return emails, err
 }
@@ -42,7 +39,7 @@ func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	var err error
 	emails, err := repo.GetEmailsFromStorage()
 	if err != nil {
-		return false, errors.Wrap(err, "Failed to check the existence of email")
+		return false, errors.Wrap(err, exception.FailToCheckExistenceOfEmailMessage)
 	}
 
 	for _, existingEmail := range emails {
@@ -53,37 +50,36 @@ func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	return false, err
 }
 
-func writeToStorage(record string, pathToStorage string) error {
+func WriteToStorage(record string, pathToStorage string) error {
 	var err error
-	records, err := readFromStorage(pathToStorage)
+	records, err := ReadFromStorage(pathToStorage)
 	if err != nil {
-		return err
+		return exception.WriteToStorage
 	}
 	records = append(records, record)
 
 	data, err := json.Marshal(records)
 	if err != nil {
-		return err
+		return exception.WriteToStorage
 	}
 
 	err = os.WriteFile(pathToStorage, data, os.FileMode(permToOpenTheStorage))
 	if err != nil {
-		return err
+		return exception.WriteToStorage
 	}
-
 	return err
 }
 
-func readFromStorage(pathToStorage string) ([]string, error) {
+func ReadFromStorage(pathToStorage string) ([]string, error) {
 	data, err := os.ReadFile(pathToStorage)
 	if err != nil {
-		return nil, errors.New(failToReadStorageMessage)
+		return nil, exception.ReadFromStorage
 	}
 
 	var records []string
 	err = json.Unmarshal(data, &records)
 	if err != nil {
-		return nil, err
+		return nil, exception.JsonWithIncorrectFormat
 	}
 
 	return records, nil
