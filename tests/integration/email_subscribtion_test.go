@@ -27,6 +27,7 @@ func TestSubscribeEmailSuccess(t *testing.T) {
 	records, _ := repository.ReadFromStorage(pathToStorage)
 	assert.NoError(t, serviceError)
 	assert.Equal(t, 1, countOfElementIn(testEmail, records))
+	resetStorageFile()
 }
 
 func TestSubscribeEmailFailed(t *testing.T) {
@@ -40,6 +41,7 @@ func TestSubscribeEmailFailed(t *testing.T) {
 	records, _ := repository.ReadFromStorage(pathToStorage)
 	assert.Error(t, serviceError, exception.ErrEmailIsAlreadySubscribed)
 	assert.Equal(t, 1, countOfElementIn(testEmail, records))
+	resetStorageFile()
 }
 
 func countOfElementIn(element string, in []string) int {
