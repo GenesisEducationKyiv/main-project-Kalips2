@@ -59,7 +59,7 @@ func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
 
 	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
-		err = exception.EmailIsAlreadySubscribed
+		err = exception.ErrEmailIsAlreadySubscribed
 	}
 	if err != nil {
 		return errors.Wrap(err, exception.FailToSubscribeMessage)

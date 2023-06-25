@@ -34,7 +34,7 @@ func TestSubscribeEmailFailed(t *testing.T) {
 
 	err := emailService.SubscribeEmail(testEmail)
 
-	assert.Error(t, err, exception.EmailIsAlreadySubscribed)
+	assert.Error(t, err, exception.ErrEmailIsAlreadySubscribed)
 	repo.AssertCalled(t, "CheckEmailIsExist", testEmail)
 	repo.AssertNotCalled(t, "SaveEmailToStorage", testEmail)
 }

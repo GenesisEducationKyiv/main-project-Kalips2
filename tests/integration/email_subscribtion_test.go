@@ -38,7 +38,7 @@ func TestSubscribeEmailFailed(t *testing.T) {
 	serviceError := emailService.SubscribeEmail(testEmail)
 
 	records, _ := repository.ReadFromStorage(pathToStorage)
-	assert.Error(t, serviceError, exception.EmailIsAlreadySubscribed)
+	assert.Error(t, serviceError, exception.ErrEmailIsAlreadySubscribed)
 	assert.Equal(t, 1, countOfElementIn(testEmail, records))
 }
 

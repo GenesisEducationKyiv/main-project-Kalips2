@@ -54,18 +54,18 @@ func WriteToStorage(record string, pathToStorage string) error {
 	var err error
 	records, err := ReadFromStorage(pathToStorage)
 	if err != nil {
-		return exception.WriteToStorage
+		return exception.ErrWriteToStorage
 	}
 	records = append(records, record)
 
 	data, err := json.Marshal(records)
 	if err != nil {
-		return exception.WriteToStorage
+		return exception.ErrWriteToStorage
 	}
 
 	err = os.WriteFile(pathToStorage, data, os.FileMode(permToOpenTheStorage))
 	if err != nil {
-		return exception.WriteToStorage
+		return exception.ErrWriteToStorage
 	}
 	return err
 }
@@ -73,13 +73,13 @@ func WriteToStorage(record string, pathToStorage string) error {
 func ReadFromStorage(pathToStorage string) ([]string, error) {
 	data, err := os.ReadFile(pathToStorage)
 	if err != nil {
-		return nil, exception.ReadFromStorage
+		return nil, exception.ErrReadFromStorage
 	}
 
 	var records []string
 	err = json.Unmarshal(data, &records)
 	if err != nil {
-		return nil, exception.JsonWithIncorrectFormat
+		return nil, exception.ErrJsonWithIncorrectFormat
 	}
 
 	return records, nil
