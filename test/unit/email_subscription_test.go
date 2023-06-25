@@ -3,7 +3,7 @@ package unit
 import (
 	"btc-app/service"
 	"btc-app/template/exception"
-	"btc-app/tests/unit/repository"
+	"btc-app/test/unit/repository"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
