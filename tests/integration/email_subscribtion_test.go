@@ -19,29 +19,26 @@ var (
 func TestSubscribeEmailSuccess(t *testing.T) {
 	resetStorageFile()
 	testEmail := "test@example.com"
-	c := &config.Config{EmailStoragePath: pathToStorage}
-	emailService := service.NewEmailService(c)
+	emailService := setUpSubscribeEmailTest()
 
 	serviceError := emailService.SubscribeEmail(testEmail)
 
 	records, _ := repository.ReadFromStorage(pathToStorage)
 	assert.NoError(t, serviceError)
 	assert.Equal(t, 1, countOfElementIn(testEmail, records))
-	resetStorageFile()
 }
 
 func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
 	testEmail := "loremipsum@gmail.com"
+	emailService := setUpSubscribeEmailTest()
 	_ = repository.WriteToStorage(testEmail, pathToStorage)
-	emailService := service.NewEmailService(&config.Config{EmailStoragePath: pathToStorage})
 
 	serviceError := emailService.SubscribeEmail(testEmail)
 
 	records, _ := repository.ReadFromStorage(pathToStorage)
 	assert.Error(t, serviceError, exception.ErrEmailIsAlreadySubscribed)
 	assert.Equal(t, 1, countOfElementIn(testEmail, records))
-	resetStorageFile()
 }
 
 func countOfElementIn(element string, in []string) int {
@@ -59,4 +56,8 @@ func resetStorageFile() {
 	if err := os.WriteFile(pathToStorage, emptyJSONArray, os.FileMode(permToOpenTheTestStorage)); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func setUpSubscribeEmailTest() *service.EmailServiceImpl {
+	return service.NewEmailService(&config.Config{EmailStoragePath: pathToStorage})
 }
