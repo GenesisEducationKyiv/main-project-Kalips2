@@ -5,8 +5,8 @@ permissions:
   contents: read
 
 jobs:
-  Linter:
-    name: linter
+  linter:
+    name: Linter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
