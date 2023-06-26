@@ -13,10 +13,10 @@ func main() {
 	}
 
 	var conf config.Config
-	if err := conf.InitConfigFromEnv(); err != nil {
+	if err := conf.NewConfig(); err != nil {
 		log.Fatal("Failed to initialize configuration.", err)
 	}
 
 	var curServer = server.NewServer(conf)
-	curServer.InitHandlers(&conf)
+	curServer.NewHandlers(&conf)
 }

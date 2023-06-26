@@ -2,7 +2,6 @@ package handler
 
 import (
 	"btc-app/config"
-	"btc-app/service"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,7 +9,11 @@ import (
 
 type RateHandlerImpl struct {
 	conf        *config.Config
-	rateService service.RateService
+	rateService RateService
+}
+
+type RateService interface {
+	GetCurrentRate() (float64, error)
 }
 
 func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
@@ -24,9 +27,9 @@ func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
 	}
 }
 
-func NewRateHandler(c *config.Config) *RateHandlerImpl {
+func NewRateHandler(c *config.Config, rateService RateService) *RateHandlerImpl {
 	return &RateHandlerImpl{
-		rateService: service.NewRateService(c),
+		rateService: rateService,
 		conf:        c,
 	}
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"btc-app/template/exception"
+	"btc-app/template/message"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"os"
@@ -9,20 +10,15 @@ import (
 
 var permToOpenTheStorage = 0644
 
-type EmailRepository interface {
-	SaveEmailToStorage(email string) error
-	GetEmailsFromStorage() ([]string, error)
-	CheckEmailIsExist(email string) (bool, error)
-}
-
 type EmailRepositoryImpl struct {
-	pathToStorage string
+	pathToStorage        string
+	permToOpenTheStorage int
 }
 
 func (repo *EmailRepositoryImpl) SaveEmailToStorage(email string) error {
-	err := WriteToStorage(email, repo.pathToStorage)
+	err := WriteToStorage(email, repo.pathToStorage, repo.permToOpenTheStorage)
 	if err != nil {
-		return errors.Wrap(err, exception.FailToAddEmailToStorageMessage)
+		return errors.Wrap(err, message.FailToAddEmailToStorageMessage)
 	}
 	return err
 }
@@ -30,7 +26,7 @@ func (repo *EmailRepositoryImpl) SaveEmailToStorage(email string) error {
 func (repo *EmailRepositoryImpl) GetEmailsFromStorage() ([]string, error) {
 	emails, err := ReadFromStorage(repo.pathToStorage)
 	if err != nil {
-		return nil, errors.Wrap(err, exception.FailToGetEmailsMessage)
+		return nil, errors.Wrap(err, message.FailToGetEmailsMessage)
 	}
 	return emails, err
 }
@@ -39,7 +35,7 @@ func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	var err error
 	emails, err := repo.GetEmailsFromStorage()
 	if err != nil {
-		return false, errors.Wrap(err, exception.FailToCheckExistenceOfEmailMessage)
+		return false, errors.Wrap(err, message.FailToCheckExistenceOfEmailMessage)
 	}
 
 	for _, existingEmail := range emails {
@@ -50,7 +46,7 @@ func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	return false, err
 }
 
-func WriteToStorage(record string, pathToStorage string) error {
+func WriteToStorage(record string, pathToStorage string, permToFile int) error {
 	var err error
 	records, err := ReadFromStorage(pathToStorage)
 	if err != nil {
@@ -63,7 +59,7 @@ func WriteToStorage(record string, pathToStorage string) error {
 		return exception.ErrWriteToStorage
 	}
 
-	err = os.WriteFile(pathToStorage, data, os.FileMode(permToOpenTheStorage))
+	err = os.WriteFile(pathToStorage, data, os.FileMode(permToFile))
 	if err != nil {
 		return exception.ErrWriteToStorage
 	}
@@ -87,6 +83,7 @@ func ReadFromStorage(pathToStorage string) ([]string, error) {
 
 func NewEmailRepository(pathToStorage string) *EmailRepositoryImpl {
 	return &EmailRepositoryImpl{
-		pathToStorage: pathToStorage,
+		pathToStorage:        pathToStorage,
+		permToOpenTheStorage: permToOpenTheStorage,
 	}
 }

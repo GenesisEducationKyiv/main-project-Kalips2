@@ -1,17 +1,30 @@
 package unit
 
 import (
+	"btc-app/config"
+	"btc-app/handler"
 	"btc-app/service"
 	"btc-app/template/exception"
 	"btc-app/test/unit/repository"
+	serviceTest "btc-app/test/unit/service"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-var testEmail = "test@example.com"
+type EmailSubscriptionTestInfo struct {
+	testEmail    string
+	emailRepo    *repository.MockEmailRepository
+	emailService handler.EmailService
+}
+
+var emailInfo *EmailSubscriptionTestInfo
+
+func TestMain(t *testing.M) {
+	emailInfo = setUpTest()
+}
 
 func TestSubscribeEmailSuccess(t *testing.T) {
-	repo, emailService := setUpSubscribeEmailTest()
+	testEmail, repo, emailService := getComponents(emailInfo)
 	repo.On("CheckEmailIsExist", testEmail).Return(false, nil)
 	repo.On("SaveEmailToStorage", testEmail).Return(nil)
 
@@ -23,7 +36,7 @@ func TestSubscribeEmailSuccess(t *testing.T) {
 }
 
 func TestSubscribeEmailFailed(t *testing.T) {
-	repo, emailService := setUpSubscribeEmailTest()
+	testEmail, repo, emailService := getComponents(emailInfo)
 	repo.On("CheckEmailIsExist", testEmail).Return(true, nil)
 
 	err := emailService.SubscribeEmail(testEmail)
@@ -33,9 +46,18 @@ func TestSubscribeEmailFailed(t *testing.T) {
 	repo.AssertNotCalled(t, "SaveEmailToStorage", testEmail)
 }
 
-func setUpSubscribeEmailTest() (*repository.MockEmailRepository, service.EmailService) {
-	repo := &repository.MockEmailRepository{}
-	emailService := &service.EmailServiceImpl{}
-	emailService.SetEmailRepository(repo)
-	return repo, emailService
+func setUpTest() *EmailSubscriptionTestInfo {
+	emailRepo := &repository.MockEmailRepository{}
+	emailSender := &serviceTest.MockGoMailSender{}
+	rateService := &serviceTest.MockRateService{}
+	emailService := service.NewEmailService(&config.Config{}, rateService, emailRepo, emailSender)
+	return &EmailSubscriptionTestInfo{
+		testEmail:    "testEmail@gmail.com",
+		emailRepo:    emailRepo,
+		emailService: emailService,
+	}
+}
+
+func getComponents(emailInfo *EmailSubscriptionTestInfo) (string, *repository.MockEmailRepository, handler.EmailService) {
+	return emailInfo.testEmail, emailInfo.emailRepo, emailInfo.emailService
 }

@@ -8,11 +8,6 @@ import (
 	"strings"
 )
 
-type GoMailSender interface {
-	CreateMessage(emailFrom string, header string, body string) *gomail.Message
-	SendMessageTo(message *gomail.Message, recipients []string) error
-}
-
 type GoMailSenderImpl struct {
 	dialer *gomail.Dialer
 }

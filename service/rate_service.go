@@ -2,17 +2,13 @@ package service
 
 import (
 	"btc-app/config"
-	"btc-app/template/exception"
+	"btc-app/template/message"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
 )
-
-type RateService interface {
-	GetCurrentRate() (float64, error)
-}
 
 type RateServiceImpl struct {
 	conf *config.Config
@@ -26,11 +22,11 @@ func (rateService RateServiceImpl) GetCurrentRate() (float64, error) {
 	conf := rateService.conf
 	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", conf.CryptoApiURL, conf.CurrencyFrom, conf.CurrencyTo)
 	if resp, err = http.Get(url); err != nil {
-		return 0, errors.Wrap(err, exception.FailToGetRateMessage)
+		return 0, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 
 	if rate, err = getRateFromHttpResponse(resp); err != nil {
-		return 0, errors.Wrap(err, exception.FailToGetRateMessage)
+		return 0, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 	return rate, err
 }

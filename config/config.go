@@ -24,8 +24,8 @@ type varToField struct {
 	field   interface{}
 }
 
-func (c *Config) InitConfigFromEnv() error {
-	requiredEnvVars := initRequiredVars(c)
+func (c *Config) NewConfig() error {
+	requiredEnvVars := newRequiredVars(c)
 
 	for _, envVar := range requiredEnvVars {
 		value := os.Getenv(envVar.varName)
@@ -46,7 +46,7 @@ func (c *Config) InitConfigFromEnv() error {
 	return nil
 }
 
-func initRequiredVars(c *Config) []varToField {
+func newRequiredVars(c *Config) []varToField {
 	return []varToField{
 		{"PORT", &c.Port},
 		{"CRYPTO_API_URL", &c.CryptoApiURL},

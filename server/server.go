@@ -3,6 +3,8 @@ package server
 import (
 	"btc-app/config"
 	"btc-app/handler"
+	"btc-app/repository"
+	"btc-app/service"
 	"fmt"
 	"github.com/go-chi/chi"
 	"log"
@@ -23,9 +25,14 @@ type RateHandler interface {
 	GetCurrentRateHandler() http.HandlerFunc
 }
 
-func (s *Server) InitHandlers(c *config.Config) {
-	rateHandler := handler.NewRateHandler(c)
-	emailHandler := handler.NewEmailHandler(c)
+func (s *Server) NewHandlers(c *config.Config) {
+	emailRepository := repository.NewEmailRepository(c.EmailStoragePath)
+	emailSender := service.NewEmailSender(c)
+	rateService := service.NewRateService(c)
+	emailService := service.NewEmailService(c, rateService, emailRepository, emailSender)
+
+	rateHandler := handler.NewRateHandler(c, rateService)
+	emailHandler := handler.NewEmailHandler(c, emailService)
 
 	s.Router.Get("/rate", rateHandler.GetCurrentRateHandler())
 	s.Router.Post("/subscribe", emailHandler.SubscribeEmailHandler())
