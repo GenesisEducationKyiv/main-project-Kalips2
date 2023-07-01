@@ -2,6 +2,7 @@ package service
 
 import (
 	"btc-app/config"
+	"btc-app/template/exception"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
@@ -9,22 +10,27 @@ import (
 	"net/http"
 )
 
-var (
-	failToGetRateMessage = "Failed get current rate"
-)
+type RateService interface {
+	GetCurrentRate() (float64, error)
+}
 
-func GetCurrentRate(c *config.Config) (float64, error) {
+type RateServiceImpl struct {
+	conf *config.Config
+}
+
+func (rateService RateServiceImpl) GetCurrentRate() (float64, error) {
 	var resp *http.Response
 	var err error
 	var rate float64
 
-	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", c.CryptoApiURL, c.CurrencyFrom, c.CurrencyTo)
+	conf := rateService.conf
+	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", conf.CryptoApiURL, conf.CurrencyFrom, conf.CurrencyTo)
 	if resp, err = http.Get(url); err != nil {
-		return 0, errors.Wrap(err, failToGetRateMessage)
+		return 0, errors.Wrap(err, exception.FailToGetRateMessage)
 	}
 
 	if rate, err = getRateFromHttpResponse(resp); err != nil {
-		return 0, errors.Wrap(err, failToGetRateMessage)
+		return 0, errors.Wrap(err, exception.FailToGetRateMessage)
 	}
 	return rate, err
 }
@@ -45,4 +51,10 @@ func getRateFromHttpResponse(resp *http.Response) (float64, error) {
 	err = json.Unmarshal(body, &data)
 	rate = data["UAH"]
 	return rate, err
+}
+
+func NewRateService(c *config.Config) *RateServiceImpl {
+	return &RateServiceImpl{
+		conf: c,
+	}
 }

@@ -3,62 +3,71 @@ package service
 import (
 	"btc-app/config"
 	"btc-app/repository"
-	"crypto/tls"
-	"fmt"
-	"github.com/go-gomail/gomail"
+	"btc-app/template/exception"
 	"github.com/pkg/errors"
 	"regexp"
-	"strings"
+	"strconv"
 )
 
-var (
-	emailRegex                  = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	ErrEmailIsAlreadySubscribed = errors.New("Email is already subscribed!")
-	failToSendRateMessage       = "Failed to send the rate to emails"
-	failToSubscribeMessage      = "Failed to subscribe email"
-)
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
-func SendRateToEmails(c *config.Config) error {
+type EmailService interface {
+	SendRateToEmails() error
+	SubscribeEmail(email string) error
+}
+
+type EmailServiceImpl struct {
+	conf            *config.Config
+	rateService     RateService
+	emailRepository repository.EmailRepository
+	emailSender     GoMailSender
+}
+
+func (emailService *EmailServiceImpl) SendRateToEmails() error {
 	var emails []string
 	var err error
+	conf := emailService.conf
 
-	emails, err = repository.GetEmailsFromStorage(c.EmailStoragePath)
+	emails, err = emailService.emailRepository.GetEmailsFromStorage()
 	if err != nil {
-		return errors.Wrap(err, failToSendRateMessage)
+		return errors.Wrap(err, exception.FailToSendRateMessage)
 	}
 
-	rate, err := GetCurrentRate(c)
+	rate, err := emailService.rateService.GetCurrentRate()
 	if err != nil {
-		return errors.Wrap(err, failToSendRateMessage)
+		return errors.Wrap(err, exception.FailToSendRateMessage)
 	}
 
-	dialer, message := setUpMessageToSend(rate, c)
-	err = sendMessageToEmails(message, emails, dialer)
+	rateFormatted := strconv.FormatFloat(rate, 'f', 5, 64)
+	emailSubject := "Поточний курс " + conf.CurrencyFrom + " до " + conf.CurrencyTo + "."
+	message := emailService.emailSender.CreateMessage(conf.EmailServiceFrom, emailSubject, rateFormatted)
+
+	err = emailService.emailSender.SendMessageTo(message, emails)
 	if err != nil {
-		return errors.Wrap(err, failToSendRateMessage)
+		return errors.Wrap(err, exception.FailToSendRateMessage)
 	}
 	return err
 }
 
-func SubscribeEmail(email string, c *config.Config) error {
+func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
 	var err error
 
 	err = validateEmail(email)
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeMessage)
+		return errors.Wrap(err, exception.FailToSubscribeMessage)
 	}
 
-	exist, err := repository.CheckEmailIsExist(email, c.EmailStoragePath)
+	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
-		err = ErrEmailIsAlreadySubscribed
+		err = exception.ErrEmailIsAlreadySubscribed
 	}
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeMessage)
+		return errors.Wrap(err, exception.FailToSubscribeMessage)
 	}
 
-	err = repository.SaveEmailToStorage(email, c.EmailStoragePath)
+	err = emailService.emailRepository.SaveEmailToStorage(email)
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeMessage)
+		return errors.Wrap(err, exception.FailToSubscribeMessage)
 	}
 	return err
 }
@@ -71,26 +80,23 @@ func validateEmail(email string) error {
 	return err
 }
 
-func setUpMessageToSend(rate float64, c *config.Config) (*gomail.Dialer, *gomail.Message) {
-	dialer := gomail.NewDialer(c.EmailServiceHost, c.EmailServicePort, c.EmailServiceFrom, c.EmailServicePassword)
-	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-	message := gomail.NewMessage()
-	message.SetHeader("From", c.EmailServiceFrom)
-	message.SetHeader("Subject", c.EmailServiceSubject)
-	message.SetBody("text/plain", "Поточний курс "+c.CurrencyFrom+" до "+c.CurrencyTo+": "+fmt.Sprintf("%.5f", rate)+".")
-
-	return dialer, message
+func (emailService *EmailServiceImpl) SetEmailRepository(repo repository.EmailRepository) {
+	emailService.emailRepository = repo
 }
 
-func sendMessageToEmails(message *gomail.Message, emails []string, dialer *gomail.Dialer) error {
-	var err error
-	var failedEmails []string
-	for _, email := range emails {
-		message.SetHeader("To", email)
-		if err = dialer.DialAndSend(message); err != nil {
-			failedEmails = append(failedEmails, email)
-		}
+func (emailService *EmailServiceImpl) SetEmailSender(sender GoMailSender) {
+	emailService.emailSender = sender
+}
+
+func (emailService *EmailServiceImpl) SetRateService(rateService RateService) {
+	emailService.rateService = rateService
+}
+
+func NewEmailService(c *config.Config) *EmailServiceImpl {
+	return &EmailServiceImpl{
+		conf:            c,
+		rateService:     NewRateService(c),
+		emailRepository: repository.NewEmailRepository(c.EmailStoragePath),
+		emailSender:     NewEmailSender(c),
 	}
-	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, " "))
 }

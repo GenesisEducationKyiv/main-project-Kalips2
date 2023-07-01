@@ -14,27 +14,31 @@ type Server struct {
 	Router *chi.Mux
 }
 
+type EmailHandler interface {
+	SendToEmailsHandler() http.HandlerFunc
+	SubscribeEmailHandler() http.HandlerFunc
+}
+
+type RateHandler interface {
+	GetCurrentRateHandler() http.HandlerFunc
+}
+
+func (s *Server) InitHandlers(c *config.Config) {
+	rateHandler := handler.NewRateHandler(c)
+	emailHandler := handler.NewEmailHandler(c)
+
+	s.Router.Get("/rate", rateHandler.GetCurrentRateHandler())
+	s.Router.Post("/subscribe", emailHandler.SubscribeEmailHandler())
+	s.Router.Post("/sendEmails", emailHandler.SendToEmailsHandler())
+
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Port), s.Router); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Port), err)
+	}
+}
+
 func NewServer(conf config.Config) *Server {
 	return &Server{
 		Config: conf,
 		Router: chi.NewRouter(),
-	}
-}
-
-func (s *Server) InitHandlers(c *config.Config) {
-	s.Router.Get("/rate", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetCurrentRateHandler(w, r, &s.Config)
-	})
-
-	s.Router.Post("/subscribe", func(w http.ResponseWriter, r *http.Request) {
-		handler.SubscribeEmailHandler(w, r, &s.Config)
-	})
-
-	s.Router.Post("/sendEmails", func(w http.ResponseWriter, r *http.Request) {
-		handler.SendToEmailsHandler(w, r, &s.Config)
-	})
-
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Port), s.Router); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Port), err)
 	}
 }

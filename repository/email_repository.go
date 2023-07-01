@@ -1,74 +1,45 @@
 package repository
 
 import (
+	"btc-app/template/exception"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"os"
 )
 
-var (
-	failToSubscribeEmailMessage = "Failed to subscribe email"
-	failToReadStorageMessage    = "Failed to read from storage"
-	permToOpenTheStorage        = 0644
-)
+var permToOpenTheStorage = 0644
 
-func SaveEmailToStorage(email string, pathToStorage string) error {
-	err := writeToStorage(email, pathToStorage)
+type EmailRepository interface {
+	SaveEmailToStorage(email string) error
+	GetEmailsFromStorage() ([]string, error)
+	CheckEmailIsExist(email string) (bool, error)
+}
+
+type EmailRepositoryImpl struct {
+	pathToStorage string
+}
+
+func (repo *EmailRepositoryImpl) SaveEmailToStorage(email string) error {
+	err := WriteToStorage(email, repo.pathToStorage)
 	if err != nil {
-		return errors.Wrap(err, failToSubscribeEmailMessage)
+		return errors.Wrap(err, exception.FailToAddEmailToStorageMessage)
 	}
 	return err
 }
 
-func GetEmailsFromStorage(pathToStorage string) ([]string, error) {
-	emails, err := readFromStorage(pathToStorage)
+func (repo *EmailRepositoryImpl) GetEmailsFromStorage() ([]string, error) {
+	emails, err := ReadFromStorage(repo.pathToStorage)
 	if err != nil {
-		return nil, errors.Wrap(err, failToReadStorageMessage)
+		return nil, errors.Wrap(err, exception.FailToGetEmailsMessage)
 	}
 	return emails, err
 }
 
-func writeToStorage(email string, pathToStorage string) error {
+func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	var err error
-	emails, err := readFromStorage(pathToStorage)
+	emails, err := repo.GetEmailsFromStorage()
 	if err != nil {
-		return err
-	}
-	emails = append(emails, email)
-
-	data, err := json.Marshal(emails)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(pathToStorage, data, os.FileMode(permToOpenTheStorage))
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func readFromStorage(pathToStorage string) ([]string, error) {
-	data, err := os.ReadFile(pathToStorage)
-	if err != nil {
-		return nil, errors.New(failToReadStorageMessage)
-	}
-
-	var emails []string
-	err = json.Unmarshal(data, &emails)
-	if err != nil {
-		return nil, err
-	}
-
-	return emails, nil
-}
-
-func CheckEmailIsExist(email string, pathToStorage string) (bool, error) {
-	var err error
-	emails, err := GetEmailsFromStorage(pathToStorage)
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to check the existence of email")
+		return false, errors.Wrap(err, exception.FailToCheckExistenceOfEmailMessage)
 	}
 
 	for _, existingEmail := range emails {
@@ -77,4 +48,45 @@ func CheckEmailIsExist(email string, pathToStorage string) (bool, error) {
 		}
 	}
 	return false, err
+}
+
+func WriteToStorage(record string, pathToStorage string) error {
+	var err error
+	records, err := ReadFromStorage(pathToStorage)
+	if err != nil {
+		return exception.ErrWriteToStorage
+	}
+	records = append(records, record)
+
+	data, err := json.Marshal(records)
+	if err != nil {
+		return exception.ErrWriteToStorage
+	}
+
+	err = os.WriteFile(pathToStorage, data, os.FileMode(permToOpenTheStorage))
+	if err != nil {
+		return exception.ErrWriteToStorage
+	}
+	return err
+}
+
+func ReadFromStorage(pathToStorage string) ([]string, error) {
+	data, err := os.ReadFile(pathToStorage)
+	if err != nil {
+		return nil, exception.ErrReadFromStorage
+	}
+
+	var records []string
+	err = json.Unmarshal(data, &records)
+	if err != nil {
+		return nil, exception.ErrJsonWithIncorrectFormat
+	}
+
+	return records, nil
+}
+
+func NewEmailRepository(pathToStorage string) *EmailRepositoryImpl {
+	return &EmailRepositoryImpl{
+		pathToStorage: pathToStorage,
+	}
 }
