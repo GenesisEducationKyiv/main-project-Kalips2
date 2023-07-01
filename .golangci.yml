@@ -1,0 +1,7 @@
+linters:
+  enable:
+    - errname
+    - dupl
+    - goconst
+    - gomnd
+    - whitespace
