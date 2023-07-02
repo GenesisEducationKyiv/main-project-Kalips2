@@ -1,4 +1,4 @@
-package repository
+package repository_mock
 
 import (
 	"btc-app/model"

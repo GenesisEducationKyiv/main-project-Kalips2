@@ -3,13 +3,12 @@ package service
 import (
 	"btc-app/config"
 	"btc-app/model"
-	"btc-app/service/rate_chain"
 	"btc-app/template/message"
 	"github.com/pkg/errors"
 )
 
 type RateServiceImpl struct {
-	rateProvider rate_chain.CryptoChain
+	rateProvider CryptoChain
 	conf         config.CryptoConfig
 }
 
@@ -23,7 +22,7 @@ func (service RateServiceImpl) GetRate() (*model.Rate, error) {
 	return rate, err
 }
 
-func NewRateService(c config.CryptoConfig, rateProvider rate_chain.CryptoChain) *RateServiceImpl {
+func NewRateService(c config.CryptoConfig, rateProvider CryptoChain) *RateServiceImpl {
 	return &RateServiceImpl{
 		conf:         c,
 		rateProvider: rateProvider,

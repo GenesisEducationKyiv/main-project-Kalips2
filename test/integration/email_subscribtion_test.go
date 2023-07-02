@@ -5,7 +5,6 @@ import (
 	"btc-app/model"
 	"btc-app/repository"
 	"btc-app/service"
-	"btc-app/service/rate_chain"
 	"btc-app/template/exception"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -21,10 +20,10 @@ var (
 
 func TestSubscribeEmailSuccess(t *testing.T) {
 	resetStorageFile()
-	testEmail := model.Email{Value: "test@example.com"}
+	testEmail := model.Email{Mail: "test@example.com"}
 	emailService := InitTestEmailService()
 
-	serviceError := emailService.SubscribeEmail(testEmail.Value)
+	serviceError := emailService.SubscribeEmail(testEmail.Mail)
 
 	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.NoError(t, serviceError)
@@ -33,11 +32,11 @@ func TestSubscribeEmailSuccess(t *testing.T) {
 
 func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
-	testEmail := model.Email{Value: "loremipsum@gmail.com"}
+	testEmail := model.Email{Mail: "loremipsum@gmail.com"}
 	emailService := InitTestEmailService()
 	_ = repository.WriteEmailToStorage(testEmail, pathToStorage, permToOpenTheTestStorage)
 
-	serviceError := emailService.SubscribeEmail(testEmail.Value)
+	serviceError := emailService.SubscribeEmail(testEmail.Mail)
 
 	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.Error(t, serviceError, exception.ErrEmailIsAlreadySubscribed)
@@ -69,6 +68,6 @@ func InitTestEmailService() *service.EmailServiceImpl {
 
 	emailRepository := repository.NewEmailRepository(databaseConfig)
 	emailSender := service.NewEmailSender(mailConfig)
-	rateService := service.NewRateService(cryptoConfig, rate_chain.InitChainOfProviders(cryptoConfig))
+	rateService := service.NewRateService(cryptoConfig, service.NewChainOfProviders(cryptoConfig))
 	return service.NewEmailService(cryptoConfig, rateService, emailRepository, emailSender)
 }

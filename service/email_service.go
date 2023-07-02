@@ -60,7 +60,7 @@ func (emailService *EmailServiceImpl) SubscribeEmail(emailVal string) error {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
 
-	email := model.Email{Value: emailVal}
+	email := model.Email{Mail: emailVal}
 	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
 		err = exception.ErrEmailIsAlreadySubscribed

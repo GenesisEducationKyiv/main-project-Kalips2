@@ -5,7 +5,6 @@ import (
 	"btc-app/handler"
 	"btc-app/repository"
 	"btc-app/service"
-	"btc-app/service/rate_chain"
 	"fmt"
 	"github.com/go-chi/chi"
 	"log"
@@ -30,7 +29,7 @@ func (s *Server) NewHandlers(c *config.Config) {
 	emailRepository := repository.NewEmailRepository(c.Database)
 	emailSender := service.NewEmailSender(c.MailService)
 
-	rateService := service.NewRateService(c.Crypto, rate_chain.InitChainOfProviders(c.Crypto))
+	rateService := service.NewRateService(c.Crypto, service.NewChainOfProviders(c.Crypto))
 	emailService := service.NewEmailService(c.Crypto, rateService, emailRepository, emailSender)
 
 	rateHandler := handler.NewRateHandler(c, rateService)

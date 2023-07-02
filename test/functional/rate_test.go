@@ -4,7 +4,6 @@ import (
 	"btc-app/config"
 	"btc-app/handler"
 	"btc-app/service"
-	"btc-app/service/rate_chain"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
@@ -37,7 +36,7 @@ func TestGetRate(t *testing.T) {
 
 func InitTestRateHandler() *handler.RateHandlerImpl {
 	conf := createConfig()
-	rateService := service.NewRateService(conf.Crypto, rate_chain.InitChainOfProviders(conf.Crypto))
+	rateService := service.NewRateService(conf.Crypto, service.NewChainOfProviders(conf.Crypto))
 	return handler.NewRateHandler(conf, rateService)
 }
 

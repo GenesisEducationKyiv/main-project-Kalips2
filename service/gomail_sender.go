@@ -27,9 +27,9 @@ func (sender *GoMailSenderImpl) SendMessageTo(message *gomail.Message, recipient
 
 	mailMsg := sender.createMailMessage(message)
 	for _, email := range recipients {
-		message.SetHeader("To", email.Value)
+		message.SetHeader("To", email.Mail)
 		if err = sender.dialer.DialAndSend(message); err != nil {
-			failedEmails = append(failedEmails, email.Value)
+			failedEmails = append(failedEmails, email.Mail)
 		}
 	}
 	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, ", "))

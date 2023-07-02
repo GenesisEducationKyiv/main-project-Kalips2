@@ -1,4 +1,4 @@
-package rate_chain
+package service
 
 import (
 	"btc-app/config"
@@ -11,19 +11,47 @@ import (
 	"net/http"
 )
 
-type CryptoChain interface {
-	GetCurrencyRate(currFrom string, currTo string) (*model.Rate, error)
-	SetNext(chain *CryptoChain)
+type (
+	CryptoProvider struct {
+		URL        string
+		pathToRate string
+		next       CryptoChain
+	}
+
+	CryptoChain interface {
+		GetCurrencyRate(currFrom string, currTo string) (*model.Rate, error)
+		SetNext(chain CryptoChain)
+	}
+)
+
+func (pr *CryptoProvider) SetNext(next CryptoChain) {
+	pr.next = next
 }
 
-func InitChainOfProviders(c config.CryptoConfig) CryptoChain {
-	cryptoCompareProvider := NewCryptoCompareProvider(c.CryptoCompareProviderURL, c.CurrencyTo)
-	coinMarketProvider := NewCoinMarketProvider(c.CoinMarketProviderURL, fmt.Sprintf("data.%s.quote.%s.price", c.CurrencyFrom, c.CurrencyTo))
-	coinApiProvider := NewCoinApiProvider(c.CoinApiProviderURL, "rate")
+func (pr *CryptoProvider) GetCurrencyRate(currFrom string, currTo string) (*model.Rate, error) {
+	var err error
+	rate, err := getCurrencyRate(pr.URL, pr.pathToRate, currFrom, currTo)
+	if err != nil && pr.next != nil {
+		rate, err = pr.next.GetCurrencyRate(currFrom, currTo)
+	}
+	return rate, err
+}
 
-	cryptoCompareProvider.SetNext(&coinMarketProvider)
-	coinMarketProvider.SetNext(&coinApiProvider)
+func NewChainOfProviders(c config.CryptoConfig) CryptoChain {
+	cryptoCompareProvider := NewCryptoProvider(c.CryptoCompareProviderURL, c.CurrencyTo)
+	coinMarketProvider := NewCryptoProvider(c.CoinMarketProviderURL, fmt.Sprintf("data.%s.quote.%s.price", c.CurrencyFrom, c.CurrencyTo))
+	coinApiProvider := NewCryptoProvider(c.CoinApiProviderURL, "rate")
+
+	cryptoCompareProvider.SetNext(coinMarketProvider)
+	coinMarketProvider.SetNext(coinApiProvider)
 	return cryptoCompareProvider
+}
+
+func NewCryptoProvider(providerURL string, pathToRate string) CryptoChain {
+	return &CryptoProvider{
+		URL:        providerURL,
+		pathToRate: pathToRate,
+	}
 }
 
 func getCurrencyRate(prvUrl string, pathToRate string, currTo string, currFrom string) (*model.Rate, error) {

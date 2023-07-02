@@ -11,7 +11,7 @@ FROM scratch
 
 COPY --from=build-stage /btcApplication/btc-app /btcApplication/btc-app
 COPY --from=build-stage /btcApplication/subscriptions.csv ./
-COPY --from=build-stage /btcApplication/.env/ ./
+COPY --from=build-stage /btcApplication/config.json/ ./
 COPY --from=build-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 EXPOSE 8080
