@@ -8,10 +8,9 @@ import (
 
 type MockCryptoProvider struct {
 	mock.Mock
-	next service.CryptoChain
 }
 
-func (m *MockCryptoProvider) GetCurrencyRate(currFrom string, currTo string) (*model.Rate, error) {
+func (m *MockCryptoProvider) GetRate(currFrom string, currTo string) (*model.Rate, error) {
 	result := m.Called(currFrom, currTo)
 	return result.Get(0).(*model.Rate), result.Error(1)
 }

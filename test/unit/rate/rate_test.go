@@ -26,25 +26,25 @@ func TestMain(t *testing.M) {
 func TestGetRateSuccessful(t *testing.T) {
 	expRate := model.Rate{Value: 999.876}
 	rateProvider, cryptoConfig, rateService := getComponents(rateInfo)
-	rateProvider.On("GetCurrencyRate", cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo).Return(expRate, nil)
+	rateProvider.On("GetRate", cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo).Return(expRate, nil)
 
 	rate, err := rateService.GetRate()
 
 	assert.NoError(t, err)
 	assert.Equal(t, expRate, rate)
-	rateProvider.AssertNumberOfCalls(t, "GetCurrencyRate", 1)
+	rateProvider.AssertNumberOfCalls(t, "GetRate", 1)
 }
 
 func TestGetRateFailed(t *testing.T) {
 	rateProvider, cryptoConfig, rateService := getComponents(rateInfo)
 	expErr := errors.New("failed to get rate from response")
-	rateProvider.On("GetCurrencyRate", cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo).Return(nil, expErr)
+	rateProvider.On("GetRate", cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo).Return(nil, expErr)
 
 	rate, err := rateService.GetRate()
 
 	assert.Error(t, expErr, err)
 	assert.Equal(t, nil, rate)
-	rateProvider.AssertNumberOfCalls(t, "GetCurrencyRate", 1)
+	rateProvider.AssertNumberOfCalls(t, "GetRate", 1)
 }
 
 func getComponents(info *RateTestInfo) (*service_mock.MockCryptoProvider, config.CryptoConfig, handler.RateService) {

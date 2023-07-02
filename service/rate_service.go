@@ -16,7 +16,7 @@ func (service RateServiceImpl) GetRate() (*model.Rate, error) {
 	var err error
 	var rate *model.Rate
 
-	if rate, err = service.rateProvider.GetCurrencyRate(service.conf.CurrencyFrom, service.conf.CurrencyTo); err != nil {
+	if rate, err = service.rateProvider.GetRate(service.conf.CurrencyFrom, service.conf.CurrencyTo); err != nil {
 		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 	return rate, err

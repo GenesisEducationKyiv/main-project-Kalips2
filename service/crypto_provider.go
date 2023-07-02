@@ -8,18 +8,20 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"io"
+	"log"
 	"net/http"
 )
 
 type (
 	CryptoProvider struct {
+		name       string
 		URL        string
 		pathToRate string
 		next       CryptoChain
 	}
 
 	CryptoChain interface {
-		GetCurrencyRate(currFrom string, currTo string) (*model.Rate, error)
+		GetRate(currFrom string, currTo string) (*model.Rate, error)
 		SetNext(chain CryptoChain)
 	}
 )
@@ -28,53 +30,56 @@ func (pr *CryptoProvider) SetNext(next CryptoChain) {
 	pr.next = next
 }
 
-func (pr *CryptoProvider) GetCurrencyRate(currFrom string, currTo string) (*model.Rate, error) {
+func (pr *CryptoProvider) GetRate(currFrom string, currTo string) (*model.Rate, error) {
 	var err error
-	rate, err := getCurrencyRate(pr.URL, pr.pathToRate, currFrom, currTo)
+	rate, err := pr.getRateByURL(pr.URL, pr.pathToRate, currFrom, currTo)
 	if err != nil && pr.next != nil {
-		rate, err = pr.next.GetCurrencyRate(currFrom, currTo)
+		rate, err = pr.next.GetRate(currFrom, currTo)
 	}
 	return rate, err
 }
 
+func NewCryptoProvider(name string, providerURL string, pathToRate string) CryptoChain {
+	return &CryptoProvider{
+		name:       name,
+		URL:        providerURL,
+		pathToRate: pathToRate,
+	}
+}
+
 func NewChainOfProviders(c config.CryptoConfig) CryptoChain {
-	cryptoCompareProvider := NewCryptoProvider(c.CryptoCompareProviderURL, c.CurrencyTo)
-	coinMarketProvider := NewCryptoProvider(c.CoinMarketProviderURL, fmt.Sprintf("data.%s.quote.%s.price", c.CurrencyFrom, c.CurrencyTo))
-	coinApiProvider := NewCryptoProvider(c.CoinApiProviderURL, "rate")
+	cryptoCompareProvider := NewCryptoProvider("Crypto Compare", c.CryptoCompareProviderURL, c.CurrencyTo)
+	coinMarketProvider := NewCryptoProvider("Coin Market", c.CoinMarketProviderURL, fmt.Sprintf("data.%s.quote.%s.price", c.CurrencyFrom, c.CurrencyTo))
+	coinApiProvider := NewCryptoProvider("Coin Api", c.CoinApiProviderURL, "rate")
 
 	cryptoCompareProvider.SetNext(coinMarketProvider)
 	coinMarketProvider.SetNext(coinApiProvider)
 	return cryptoCompareProvider
 }
 
-func NewCryptoProvider(providerURL string, pathToRate string) CryptoChain {
-	return &CryptoProvider{
-		URL:        providerURL,
-		pathToRate: pathToRate,
-	}
-}
-
-func getCurrencyRate(prvUrl string, pathToRate string, currTo string, currFrom string) (*model.Rate, error) {
+func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, currTo string, currFrom string) (*model.Rate, error) {
 	var err error
 	var resp *http.Response
 	rate := &model.Rate{}
 
 	url := fmt.Sprintf(prvUrl, currTo, currFrom)
 	if resp, err = http.Get(url); err != nil {
+		log.Printf("Error during sending request to %s", pr.name)
 		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 
-	if rate, err = getRateFromHttpResponse(resp, pathToRate); err != nil {
+	if rate, err = pr.getRateFromHttpResponse(resp, pathToRate); err != nil {
+		log.Printf("Error during parsing response from %s", pr.name)
 		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 	return rate, err
 }
 
-func getRateFromHttpResponse(resp *http.Response, pathToRate string) (*model.Rate, error) {
+func (pr *CryptoProvider) getRateFromHttpResponse(resp *http.Response, pathToRate string) (*model.Rate, error) {
 	var err error
-
 	rate := model.Rate{}
-	body, err := getBytesFromResponse(resp)
+
+	body, err := pr.getBytesFromResponse(resp)
 	if err != nil {
 		return &rate, err
 	}
@@ -88,7 +93,7 @@ func getRateFromHttpResponse(resp *http.Response, pathToRate string) (*model.Rat
 	return &rate, err
 }
 
-func getBytesFromResponse(resp *http.Response) ([]byte, error) {
+func (pr *CryptoProvider) getBytesFromResponse(resp *http.Response) ([]byte, error) {
 	var err error
 	var body []byte
 
@@ -101,5 +106,6 @@ func getBytesFromResponse(resp *http.Response) ([]byte, error) {
 		return nil, errors.New("Failed to read body of response")
 	}
 
+	log.Printf("Response from %s: %s", pr.name, body)
 	return body, err
 }
