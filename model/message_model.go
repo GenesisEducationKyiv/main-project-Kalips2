@@ -1,15 +1,11 @@
 package model
 
-import "strconv"
-
 type Message struct {
-	EmailFrom string
-	Header    string
-	Body      string
+	Header string
+	Body   string
 }
 
-func NewRateMessage(rate float64, emailFrom string, currFrom string, currTo string) *Message {
-	rateFormatted := strconv.FormatFloat(rate, 'f', 5, 64)
+func NewRateMessage(rate *Rate, currFrom string, currTo string) *Message {
 	emailSubject := "Поточний курс " + currFrom + " до " + currTo + "."
-	return &Message{EmailFrom: emailFrom, Header: emailSubject, Body: rateFormatted}
+	return &Message{Header: emailSubject, Body: rate.ToString()}
 }

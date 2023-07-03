@@ -13,22 +13,22 @@ type GoMailSenderImpl struct {
 	dialer *gomail.Dialer
 }
 
-func (sender *GoMailSenderImpl) createMailMessage(message *model.Message) *gomail.Message {
+func (sender *GoMailSenderImpl) createMailMessage(message *model.Message, mailFrom string) *gomail.Message {
 	mailMsg := gomail.NewMessage()
-	mailMsg.SetHeader("From", message.EmailFrom)
+	mailMsg.SetHeader("From", mailFrom)
 	mailMsg.SetHeader("Subject", message.Header)
 	mailMsg.SetBody("text/plain", message.Body)
 	return mailMsg
 }
 
-func (sender *GoMailSenderImpl) SendMessageTo(message *gomail.Message, recipients []model.Email) error {
+func (sender *GoMailSenderImpl) SendMessageTo(message *model.Message, recipients []model.Email) error {
 	var err error
 	var failedEmails []string
 
-	mailMsg := sender.createMailMessage(message)
+	mailMsg := sender.createMailMessage(message, sender.dialer.Username)
 	for _, email := range recipients {
-		message.SetHeader("To", email.Mail)
-		if err = sender.dialer.DialAndSend(message); err != nil {
+		mailMsg.SetHeader("To", email.Mail)
+		if err = sender.dialer.DialAndSend(mailMsg); err != nil {
 			failedEmails = append(failedEmails, email.Mail)
 		}
 	}

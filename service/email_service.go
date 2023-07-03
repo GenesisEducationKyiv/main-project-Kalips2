@@ -26,7 +26,7 @@ type EmailRepository interface {
 }
 
 type GoMailSender interface {
-	SendMessageTo(message *model.Message, recipients []string) error
+	SendMessageTo(message *model.Message, recipients []model.Email) error
 }
 
 func (emailService *EmailServiceImpl) SendRateToEmails() error {
@@ -44,7 +44,7 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
 
-	msg := model.NewRateMessage(rate, conf.EmailServiceFrom, conf.CurrencyFrom, conf.CurrencyTo)
+	msg := model.NewRateMessage(rate, conf.CurrencyFrom, conf.CurrencyTo)
 	err = emailService.emailSender.SendMessageTo(msg, emails)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
