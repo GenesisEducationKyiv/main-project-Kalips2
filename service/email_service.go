@@ -3,12 +3,11 @@ package service
 import (
 	"btc-app/config"
 	"btc-app/handler"
+	"btc-app/model"
 	"btc-app/template/exception"
 	"btc-app/template/message"
-	"github.com/go-gomail/gomail"
 	"github.com/pkg/errors"
 	"regexp"
-	"strconv"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
@@ -27,8 +26,7 @@ type EmailRepository interface {
 }
 
 type GoMailSender interface {
-	CreateMessage(emailFrom string, header string, body string) *gomail.Message
-	SendMessageTo(message *gomail.Message, recipients []string) error
+	SendMessageTo(message *model.Message, recipients []string) error
 }
 
 func (emailService *EmailServiceImpl) SendRateToEmails() error {
@@ -46,10 +44,7 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
 
-	rateFormatted := strconv.FormatFloat(rate, 'f', 5, 64)
-	emailSubject := "Поточний курс " + conf.CurrencyFrom + " до " + conf.CurrencyTo + "."
-	msg := emailService.emailSender.CreateMessage(conf.EmailServiceFrom, emailSubject, rateFormatted)
-
+	msg := model.NewRateMessage(rate, conf.EmailServiceFrom, conf.CurrencyFrom, conf.CurrencyTo)
 	err = emailService.emailSender.SendMessageTo(msg, emails)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
