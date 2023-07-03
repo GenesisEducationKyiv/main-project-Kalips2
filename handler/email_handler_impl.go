@@ -2,7 +2,6 @@ package handler
 
 import (
 	"btc-app/config"
-	"btc-app/service"
 	"btc-app/template/message"
 	"fmt"
 	"net/http"
@@ -10,7 +9,12 @@ import (
 
 type EmailHandlerImpl struct {
 	conf         *config.Config
-	emailService service.EmailService
+	emailService EmailService
+}
+
+type EmailService interface {
+	SendRateToEmails() error
+	SubscribeEmail(email string) error
 }
 
 func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
@@ -37,9 +41,9 @@ func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 	}
 }
 
-func NewEmailHandler(c *config.Config) *EmailHandlerImpl {
+func NewEmailHandler(c *config.Config, emailService EmailService) *EmailHandlerImpl {
 	return &EmailHandlerImpl{
-		emailService: service.NewEmailService(c),
+		emailService: emailService,
 		conf:         c,
 	}
 }

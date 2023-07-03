@@ -3,6 +3,7 @@ package functional
 import (
 	"btc-app/config"
 	"btc-app/handler"
+	"btc-app/service"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -15,7 +16,7 @@ import (
 )
 
 func TestGetRate(t *testing.T) {
-	rateHandler := handler.NewRateHandler(createConfig())
+	rateHandler := InitTestRateHandler()
 	server := httptest.NewServer(rateHandler.GetCurrentRateHandler())
 	defer server.Close()
 
@@ -34,14 +35,20 @@ func TestGetRate(t *testing.T) {
 	assert.True(t, !math.IsNaN(rate) && !math.IsInf(rate, 0), "unexpected response body, expected a valid floating-point number")
 }
 
+func InitTestRateHandler() *handler.RateHandlerImpl {
+	conf := createConfig()
+	rateService := service.NewRateService(conf)
+	return handler.NewRateHandler(conf, rateService)
+}
+
 func createConfig() *config.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Failed to load env variables from .env file.", err)
 	}
 
-	var conf config.Config
-	if err := conf.InitConfigFromEnv(); err != nil {
+	var c config.Config
+	if err := c.NewConfig(); err != nil {
 		log.Fatal("Failed to initialize configuration.", err)
 	}
-	return &conf
+	return &c
 }

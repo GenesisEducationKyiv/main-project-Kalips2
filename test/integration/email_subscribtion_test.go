@@ -19,7 +19,7 @@ var (
 func TestSubscribeEmailSuccess(t *testing.T) {
 	resetStorageFile()
 	testEmail := "test@example.com"
-	emailService := setUpSubscribeEmailTest()
+	emailService := InitTestEmailService()
 
 	serviceError := emailService.SubscribeEmail(testEmail)
 
@@ -31,8 +31,8 @@ func TestSubscribeEmailSuccess(t *testing.T) {
 func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
 	testEmail := "loremipsum@gmail.com"
-	emailService := setUpSubscribeEmailTest()
-	_ = repository.WriteToStorage(testEmail, pathToStorage)
+	emailService := InitTestEmailService()
+	_ = repository.WriteToStorage(testEmail, pathToStorage, 0)
 
 	serviceError := emailService.SubscribeEmail(testEmail)
 
@@ -58,6 +58,10 @@ func resetStorageFile() {
 	}
 }
 
-func setUpSubscribeEmailTest() *service.EmailServiceImpl {
-	return service.NewEmailService(&config.Config{EmailStoragePath: pathToStorage})
+func InitTestEmailService() *service.EmailServiceImpl {
+	c := &config.Config{EmailStoragePath: pathToStorage}
+	emailRepository := repository.NewEmailRepository(c.EmailStoragePath)
+	emailSender := service.NewEmailSender(c)
+	rateService := service.NewRateService(c)
+	return service.NewEmailService(c, rateService, emailRepository, emailSender)
 }
