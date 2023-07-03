@@ -4,7 +4,7 @@ import (
 	"btc-app/config"
 	"btc-app/handler"
 	"btc-app/service"
-	"github.com/joho/godotenv"
+	"btc-app/service/rate_chain"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
@@ -37,18 +37,16 @@ func TestGetRate(t *testing.T) {
 
 func InitTestRateHandler() *handler.RateHandlerImpl {
 	conf := createConfig()
-	rateService := service.NewRateService(conf)
+	rateService := service.NewRateService(conf.Crypto, rate_chain.InitChainOfProviders(conf.Crypto))
 	return handler.NewRateHandler(conf, rateService)
 }
 
 func createConfig() *config.Config {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Failed to load env variables from .env file.", err)
-	}
+	var err error
+	var c *config.Config
 
-	var c config.Config
-	if err := c.NewConfig(); err != nil {
+	if c, err = config.NewConfig(); err != nil {
 		log.Fatal("Failed to initialize configuration.", err)
 	}
-	return &c
+	return c
 }

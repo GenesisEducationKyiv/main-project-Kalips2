@@ -23,7 +23,7 @@ func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, message.EmailSubscribed)
+			fmt.Fprintf(w, message.EmailsWereSent)
 		}
 	}
 }
@@ -36,7 +36,7 @@ func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, message.EmailsWereSent)
+			fmt.Fprintf(w, message.EmailSubscribed)
 		}
 	}
 }

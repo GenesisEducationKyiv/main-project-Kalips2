@@ -1,0 +1,23 @@
+{
+  "server": {
+    "port": 8080
+  },
+  "crypto": {
+    "cryptoCompareProvider": "https://min-api.cryptocompare.com/data/price?fsym=%s&tsyms=%s",
+    "coinMarketProvider": "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?CMC_PRO_API_KEY=4c743a6c-fe55-48ba-ad73-a04e9b2d5d30&aux=total_supply&symbol=%s&convert=%s",
+    "coinApiProvider": "https://rest.coinapi.io/v1/exchangerate/APIKEY-49886103-922E-4C59-8872-465D54EAF910/%s/%s",
+    "currencyFrom": "BTC",
+    "currencyTo": "UAH"
+  },
+  "database": {
+    "pathToStorage": "subscriptions.csv",
+    "permissionToStorage": "0644"
+  },
+  "emailService": {
+    "mailServiceHost": "smtp.gmail.com",
+    "mailPort": 587,
+    "mailSubject": "Поточний курс валют.",
+    "mailFrom": "btcapplicationgses2@gmail.com",
+    "mailPassword": "jozjpnwnibtevlyx"
+  }
+}

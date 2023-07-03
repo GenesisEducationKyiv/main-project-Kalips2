@@ -13,7 +13,7 @@ type RateHandlerImpl struct {
 }
 
 type RateService interface {
-	GetRate() (model.Rate, error)
+	GetRate() (*model.Rate, error)
 }
 
 func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
@@ -21,7 +21,7 @@ func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
 		if rate, err := rateHr.rateService.GetRate(); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
-			fmt.Fprint(w, rate.String())
+			fmt.Fprint(w, rate.ToString())
 		}
 	}
 }

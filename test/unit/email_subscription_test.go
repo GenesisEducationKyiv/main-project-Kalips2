@@ -50,7 +50,7 @@ func setUpTest() *EmailSubscriptionTestInfo {
 	emailRepo := &repository.MockEmailRepository{}
 	emailSender := &serviceTest.MockGoMailSender{}
 	rateService := &serviceTest.MockRateService{}
-	emailService := service.NewEmailService(&config.Config{}, rateService, emailRepo, emailSender)
+	emailService := service.NewEmailService(config.CryptoConfig{}, rateService, emailRepo, emailSender)
 	return &EmailSubscriptionTestInfo{
 		testEmail:    "testEmail@gmail.com",
 		emailRepo:    emailRepo,

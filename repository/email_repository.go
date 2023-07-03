@@ -1,19 +1,19 @@
 package repository
 
 import (
+	"btc-app/config"
 	"btc-app/model"
 	"btc-app/template/exception"
 	"btc-app/template/message"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"os"
+	"strconv"
 )
-
-var permToOpenTheStorage = 0644
 
 type EmailRepositoryImpl struct {
 	pathToStorage        string
-	permToOpenTheStorage int
+	permToOpenTheStorage string
 }
 
 func (repo *EmailRepositoryImpl) SaveEmail(email model.Email) error {
@@ -47,7 +47,7 @@ func (repo *EmailRepositoryImpl) CheckEmailIsExist(email model.Email) (bool, err
 	return false, err
 }
 
-func WriteEmailToStorage(email model.Email, pathToStorage string, permToFile int) error {
+func WriteEmailToStorage(email model.Email, pathToStorage string, permToFile string) error {
 	var err error
 	records, err := ReadEmailsFromStorage(pathToStorage)
 	if err != nil {
@@ -60,7 +60,8 @@ func WriteEmailToStorage(email model.Email, pathToStorage string, permToFile int
 		return exception.ErrWriteToStorage
 	}
 
-	err = os.WriteFile(pathToStorage, data, os.FileMode(permToFile))
+	permission, _ := strconv.ParseInt(permToFile, 0, 32)
+	err = os.WriteFile(pathToStorage, data, os.FileMode(permission))
 	if err != nil {
 		return exception.ErrWriteToStorage
 	}
@@ -82,9 +83,9 @@ func ReadEmailsFromStorage(pathToStorage string) ([]model.Email, error) {
 	return records, nil
 }
 
-func NewEmailRepository(pathToStorage string) *EmailRepositoryImpl {
+func NewEmailRepository(c config.DatabaseConfig) *EmailRepositoryImpl {
 	return &EmailRepositoryImpl{
-		pathToStorage:        pathToStorage,
-		permToOpenTheStorage: permToOpenTheStorage,
+		pathToStorage:        c.PathToStorage,
+		permToOpenTheStorage: c.PermissionToStorage,
 	}
 }

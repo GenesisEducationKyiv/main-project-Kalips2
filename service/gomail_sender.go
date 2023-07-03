@@ -32,11 +32,11 @@ func (sender *GoMailSenderImpl) SendMessageTo(message *gomail.Message, recipient
 			failedEmails = append(failedEmails, email.Value)
 		}
 	}
-	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, " "))
+	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, ", "))
 }
 
-func NewEmailSender(c *config.Config) *GoMailSenderImpl {
-	dialer := gomail.NewDialer(c.EmailServiceHost, c.EmailServicePort, c.EmailServiceFrom, c.EmailServicePassword)
+func NewEmailSender(c config.MailConfig) *GoMailSenderImpl {
+	dialer := gomail.NewDialer(c.MailHost, c.MailPort, c.MailFrom, c.MailPassword)
 	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	return &GoMailSenderImpl{dialer: dialer}
 }

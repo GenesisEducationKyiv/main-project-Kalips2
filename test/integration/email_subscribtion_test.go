@@ -5,16 +5,18 @@ import (
 	"btc-app/model"
 	"btc-app/repository"
 	"btc-app/service"
+	"btc-app/service/rate_chain"
 	"btc-app/template/exception"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
+	"strconv"
 	"testing"
 )
 
 var (
 	pathToStorage            = "subscriptions-test.csv"
-	permToOpenTheTestStorage = 0644
+	permToOpenTheTestStorage = "0644"
 )
 
 func TestSubscribeEmailSuccess(t *testing.T) {
@@ -33,7 +35,7 @@ func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
 	testEmail := model.Email{Value: "loremipsum@gmail.com"}
 	emailService := InitTestEmailService()
-	_ = repository.WriteEmailToStorage(testEmail, pathToStorage, 0)
+	_ = repository.WriteEmailToStorage(testEmail, pathToStorage, permToOpenTheTestStorage)
 
 	serviceError := emailService.SubscribeEmail(testEmail.Value)
 
@@ -54,15 +56,19 @@ func countOfEmailsIn(element model.Email, in []model.Email) int {
 
 func resetStorageFile() {
 	emptyJSONArray := []byte("[]")
-	if err := os.WriteFile(pathToStorage, emptyJSONArray, os.FileMode(permToOpenTheTestStorage)); err != nil {
+	permission, _ := strconv.ParseInt(permToOpenTheTestStorage, 0, 32)
+	if err := os.WriteFile(pathToStorage, emptyJSONArray, os.FileMode(permission)); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func InitTestEmailService() *service.EmailServiceImpl {
-	c := &config.Config{EmailStoragePath: pathToStorage}
-	emailRepository := repository.NewEmailRepository(c.EmailStoragePath)
-	emailSender := service.NewEmailSender(c)
-	rateService := service.NewRateService(c)
-	return service.NewEmailService(c, rateService, emailRepository, emailSender)
+	databaseConfig := config.DatabaseConfig{PathToStorage: "subscriptions-test.csv", PermissionToStorage: "0644"}
+	cryptoConfig := config.CryptoConfig{}
+	mailConfig := config.MailConfig{}
+
+	emailRepository := repository.NewEmailRepository(databaseConfig)
+	emailSender := service.NewEmailSender(mailConfig)
+	rateService := service.NewRateService(cryptoConfig, rate_chain.InitChainOfProviders(cryptoConfig))
+	return service.NewEmailService(cryptoConfig, rateService, emailRepository, emailSender)
 }

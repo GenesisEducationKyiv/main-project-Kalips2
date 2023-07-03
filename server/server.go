@@ -5,6 +5,7 @@ import (
 	"btc-app/handler"
 	"btc-app/repository"
 	"btc-app/service"
+	"btc-app/service/rate_chain"
 	"fmt"
 	"github.com/go-chi/chi"
 	"log"
@@ -12,7 +13,7 @@ import (
 )
 
 type Server struct {
-	Config config.Config
+	Config *config.Config
 	Router *chi.Mux
 }
 
@@ -26,10 +27,11 @@ type RateHandler interface {
 }
 
 func (s *Server) NewHandlers(c *config.Config) {
-	emailRepository := repository.NewEmailRepository(c.EmailStoragePath)
-	emailSender := service.NewEmailSender(c)
-	rateService := service.NewRateService(c)
-	emailService := service.NewEmailService(c, rateService, emailRepository, emailSender)
+	emailRepository := repository.NewEmailRepository(c.Database)
+	emailSender := service.NewEmailSender(c.MailService)
+
+	rateService := service.NewRateService(c.Crypto, rate_chain.InitChainOfProviders(c.Crypto))
+	emailService := service.NewEmailService(c.Crypto, rateService, emailRepository, emailSender)
 
 	rateHandler := handler.NewRateHandler(c, rateService)
 	emailHandler := handler.NewEmailHandler(c, emailService)
@@ -38,12 +40,12 @@ func (s *Server) NewHandlers(c *config.Config) {
 	s.Router.Post("/subscribe", emailHandler.SubscribeEmailHandler())
 	s.Router.Post("/sendEmails", emailHandler.SendToEmailsHandler())
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Port), s.Router); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Port), err)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Server.Port), s.Router); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Server.Port), err)
 	}
 }
 
-func NewServer(conf config.Config) *Server {
+func NewServer(conf *config.Config) *Server {
 	return &Server{
 		Config: conf,
 		Router: chi.NewRouter(),

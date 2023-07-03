@@ -13,7 +13,7 @@ import (
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 type EmailServiceImpl struct {
-	conf            *config.Config
+	conf            config.CryptoConfig
 	rateService     handler.RateService
 	emailRepository EmailRepository
 	emailSender     GoMailSender
@@ -84,7 +84,7 @@ func validateEmail(email string) error {
 	return err
 }
 
-func NewEmailService(c *config.Config, service handler.RateService, emailRepository EmailRepository, sender GoMailSender) *EmailServiceImpl {
+func NewEmailService(c config.CryptoConfig, service handler.RateService, emailRepository EmailRepository, sender GoMailSender) *EmailServiceImpl {
 	return &EmailServiceImpl{
 		conf:            c,
 		rateService:     service,
