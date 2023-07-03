@@ -1,6 +1,7 @@
 package service
 
 import (
+	"btc-app/model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -8,7 +9,7 @@ type MockRateService struct {
 	mock.Mock
 }
 
-func (m *MockRateService) GetCurrentRate() (float64, error) {
+func (m *MockRateService) GetRate() (model.Rate, error) {
 	result := m.Called()
-	return result.Get(0).(float64), result.Error(1)
+	return result.Get(0).(model.Rate), result.Error(1)
 }

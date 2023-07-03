@@ -14,7 +14,7 @@ type EmailHandlerImpl struct {
 
 type EmailService interface {
 	SendRateToEmails() error
-	SubscribeEmail(email string) error
+	SubscribeEmail(emailVal string) error
 }
 
 func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {

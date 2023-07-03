@@ -20,9 +20,9 @@ type EmailServiceImpl struct {
 }
 
 type EmailRepository interface {
-	SaveEmailToStorage(email string) error
-	GetEmailsFromStorage() ([]string, error)
-	CheckEmailIsExist(email string) (bool, error)
+	SaveEmail(email model.Email) error
+	GetEmailsFromStorage() ([]model.Email, error)
+	CheckEmailIsExist(email model.Email) (bool, error)
 }
 
 type GoMailSender interface {
@@ -30,7 +30,7 @@ type GoMailSender interface {
 }
 
 func (emailService *EmailServiceImpl) SendRateToEmails() error {
-	var emails []string
+	var emails []model.Email
 	var err error
 	conf := emailService.conf
 
@@ -39,7 +39,7 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
 
-	rate, err := emailService.rateService.GetCurrentRate()
+	rate, err := emailService.rateService.GetRate()
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
@@ -52,14 +52,15 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 	return err
 }
 
-func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
+func (emailService *EmailServiceImpl) SubscribeEmail(emailVal string) error {
 	var err error
 
-	err = validateEmail(email)
+	err = validateEmail(emailVal)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
 
+	email := model.Email{Value: emailVal}
 	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
 		err = exception.ErrEmailIsAlreadySubscribed
@@ -68,7 +69,7 @@ func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
 
-	err = emailService.emailRepository.SaveEmailToStorage(email)
+	err = emailService.emailRepository.SaveEmail(email)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}

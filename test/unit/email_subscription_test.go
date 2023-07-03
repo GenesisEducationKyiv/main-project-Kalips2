@@ -26,13 +26,13 @@ func TestMain(t *testing.M) {
 func TestSubscribeEmailSuccess(t *testing.T) {
 	testEmail, repo, emailService := getComponents(emailInfo)
 	repo.On("CheckEmailIsExist", testEmail).Return(false, nil)
-	repo.On("SaveEmailToStorage", testEmail).Return(nil)
+	repo.On("SaveEmail", testEmail).Return(nil)
 
 	err := emailService.SubscribeEmail(testEmail)
 
 	assert.NoError(t, err)
 	repo.AssertCalled(t, "CheckEmailIsExist", testEmail)
-	repo.AssertCalled(t, "SaveEmailToStorage", testEmail)
+	repo.AssertCalled(t, "SaveEmail", testEmail)
 }
 
 func TestSubscribeEmailFailed(t *testing.T) {
@@ -43,7 +43,7 @@ func TestSubscribeEmailFailed(t *testing.T) {
 
 	assert.Error(t, err, exception.ErrEmailIsAlreadySubscribed)
 	repo.AssertCalled(t, "CheckEmailIsExist", testEmail)
-	repo.AssertNotCalled(t, "SaveEmailToStorage", testEmail)
+	repo.AssertNotCalled(t, "SaveEmail", testEmail)
 }
 
 func setUpTest() *EmailSubscriptionTestInfo {

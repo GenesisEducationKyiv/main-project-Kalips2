@@ -21,15 +21,15 @@ func (sender *GoMailSenderImpl) createMailMessage(message *model.Message) *gomai
 	return mailMsg
 }
 
-func (sender *GoMailSenderImpl) SendMessageTo(message *model.Message, recipients []string) error {
+func (sender *GoMailSenderImpl) SendMessageTo(message *gomail.Message, recipients []model.Email) error {
 	var err error
 	var failedEmails []string
 
 	mailMsg := sender.createMailMessage(message)
 	for _, email := range recipients {
-		mailMsg.SetHeader("To", email)
-		if err = sender.dialer.DialAndSend(mailMsg); err != nil {
-			failedEmails = append(failedEmails, email)
+		message.SetHeader("To", email.Value)
+		if err = sender.dialer.DialAndSend(message); err != nil {
+			failedEmails = append(failedEmails, email.Value)
 		}
 	}
 	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, " "))

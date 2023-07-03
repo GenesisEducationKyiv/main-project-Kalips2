@@ -2,6 +2,7 @@ package service
 
 import (
 	"btc-app/config"
+	"btc-app/model"
 	"btc-app/template/message"
 	"encoding/json"
 	"fmt"
@@ -14,27 +15,27 @@ type RateServiceImpl struct {
 	conf *config.Config
 }
 
-func (rateService RateServiceImpl) GetCurrentRate() (float64, error) {
+func (rateService RateServiceImpl) GetRate() (model.Rate, error) {
 	var resp *http.Response
 	var err error
-	var rate float64
+	rate := model.Rate{}
 
 	conf := rateService.conf
 	url := fmt.Sprintf("%s?fsym=%s&tsyms=%s", conf.CryptoApiURL, conf.CurrencyFrom, conf.CurrencyTo)
 	if resp, err = http.Get(url); err != nil {
-		return 0, errors.Wrap(err, message.FailToGetRateMessage)
+		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 
 	if rate, err = getRateFromHttpResponse(resp); err != nil {
-		return 0, errors.Wrap(err, message.FailToGetRateMessage)
+		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 	return rate, err
 }
 
-func getRateFromHttpResponse(resp *http.Response) (float64, error) {
+func getRateFromHttpResponse(resp *http.Response) (model.Rate, error) {
 	var err error
 	var data map[string]float64
-	var rate float64
+	var rate model.Rate
 
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
@@ -42,10 +43,10 @@ func getRateFromHttpResponse(resp *http.Response) (float64, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return 0, errors.New("Failed to read body of response")
+		return rate, errors.New("Failed to read body of response")
 	}
 	err = json.Unmarshal(body, &data)
-	rate = data["UAH"]
+	rate.Value = data["UAH"]
 	return rate, err
 }
 

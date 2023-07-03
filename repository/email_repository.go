@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"btc-app/model"
 	"btc-app/template/exception"
 	"btc-app/template/message"
 	"encoding/json"
@@ -15,23 +16,23 @@ type EmailRepositoryImpl struct {
 	permToOpenTheStorage int
 }
 
-func (repo *EmailRepositoryImpl) SaveEmailToStorage(email string) error {
-	err := WriteToStorage(email, repo.pathToStorage, repo.permToOpenTheStorage)
+func (repo *EmailRepositoryImpl) SaveEmail(email model.Email) error {
+	err := WriteEmailToStorage(email, repo.pathToStorage, repo.permToOpenTheStorage)
 	if err != nil {
 		return errors.Wrap(err, message.FailToAddEmailToStorageMessage)
 	}
 	return err
 }
 
-func (repo *EmailRepositoryImpl) GetEmailsFromStorage() ([]string, error) {
-	emails, err := ReadFromStorage(repo.pathToStorage)
+func (repo *EmailRepositoryImpl) GetEmailsFromStorage() ([]model.Email, error) {
+	emails, err := ReadEmailsFromStorage(repo.pathToStorage)
 	if err != nil {
 		return nil, errors.Wrap(err, message.FailToGetEmailsMessage)
 	}
 	return emails, err
 }
 
-func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
+func (repo *EmailRepositoryImpl) CheckEmailIsExist(email model.Email) (bool, error) {
 	var err error
 	emails, err := repo.GetEmailsFromStorage()
 	if err != nil {
@@ -46,13 +47,13 @@ func (repo *EmailRepositoryImpl) CheckEmailIsExist(email string) (bool, error) {
 	return false, err
 }
 
-func WriteToStorage(record string, pathToStorage string, permToFile int) error {
+func WriteEmailToStorage(email model.Email, pathToStorage string, permToFile int) error {
 	var err error
-	records, err := ReadFromStorage(pathToStorage)
+	records, err := ReadEmailsFromStorage(pathToStorage)
 	if err != nil {
 		return exception.ErrWriteToStorage
 	}
-	records = append(records, record)
+	records = append(records, email)
 
 	data, err := json.Marshal(records)
 	if err != nil {
@@ -66,13 +67,13 @@ func WriteToStorage(record string, pathToStorage string, permToFile int) error {
 	return err
 }
 
-func ReadFromStorage(pathToStorage string) ([]string, error) {
+func ReadEmailsFromStorage(pathToStorage string) ([]model.Email, error) {
 	data, err := os.ReadFile(pathToStorage)
 	if err != nil {
 		return nil, exception.ErrReadFromStorage
 	}
 
-	var records []string
+	var records []model.Email
 	err = json.Unmarshal(data, &records)
 	if err != nil {
 		return nil, exception.ErrJsonWithIncorrectFormat

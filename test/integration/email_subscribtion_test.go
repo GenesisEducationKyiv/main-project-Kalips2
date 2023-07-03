@@ -2,6 +2,7 @@ package integration
 
 import (
 	"btc-app/config"
+	"btc-app/model"
 	"btc-app/repository"
 	"btc-app/service"
 	"btc-app/template/exception"
@@ -18,30 +19,30 @@ var (
 
 func TestSubscribeEmailSuccess(t *testing.T) {
 	resetStorageFile()
-	testEmail := "test@example.com"
+	testEmail := model.Email{Value: "test@example.com"}
 	emailService := InitTestEmailService()
 
-	serviceError := emailService.SubscribeEmail(testEmail)
+	serviceError := emailService.SubscribeEmail(testEmail.Value)
 
-	records, _ := repository.ReadFromStorage(pathToStorage)
+	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.NoError(t, serviceError)
-	assert.Equal(t, 1, countOfElementIn(testEmail, records))
+	assert.Equal(t, 1, countOfEmailsIn(testEmail, records))
 }
 
 func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
-	testEmail := "loremipsum@gmail.com"
+	testEmail := model.Email{Value: "loremipsum@gmail.com"}
 	emailService := InitTestEmailService()
-	_ = repository.WriteToStorage(testEmail, pathToStorage, 0)
+	_ = repository.WriteEmailToStorage(testEmail, pathToStorage, 0)
 
-	serviceError := emailService.SubscribeEmail(testEmail)
+	serviceError := emailService.SubscribeEmail(testEmail.Value)
 
-	records, _ := repository.ReadFromStorage(pathToStorage)
+	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.Error(t, serviceError, exception.ErrEmailIsAlreadySubscribed)
-	assert.Equal(t, 1, countOfElementIn(testEmail, records))
+	assert.Equal(t, 1, countOfEmailsIn(testEmail, records))
 }
 
-func countOfElementIn(element string, in []string) int {
+func countOfEmailsIn(element model.Email, in []model.Email) int {
 	count := 0
 	for _, record := range in {
 		if record == element {
