@@ -1,4 +1,4 @@
-package service
+package service_mock
 
 import (
 	"btc-app/model"
@@ -9,7 +9,7 @@ type MockGoMailSender struct {
 	mock.Mock
 }
 
-func (m *MockGoMailSender) SendMessageTo(message *model.Message, recipients []string) error {
+func (m *MockGoMailSender) SendMessageTo(message *model.Message, recipients []model.Email) error {
 	result := m.Called(message, recipients)
 	return result.Error(0)
 }

@@ -14,7 +14,7 @@ type EmailHandlerImpl struct {
 
 type EmailService interface {
 	SendRateToEmails() error
-	SubscribeEmail(email string) error
+	SubscribeEmail(emailVal string) error
 }
 
 func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
@@ -23,7 +23,7 @@ func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, message.EmailSubscribed)
+			fmt.Fprintf(w, message.EmailsWereSent)
 		}
 	}
 }
@@ -36,14 +36,14 @@ func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, message.EmailsWereSent)
+			fmt.Fprintf(w, message.EmailSubscribed)
 		}
 	}
 }
 
 func NewEmailHandler(c *config.Config, emailService EmailService) *EmailHandlerImpl {
 	return &EmailHandlerImpl{
-		emailService: emailService,
 		conf:         c,
+		emailService: emailService,
 	}
 }

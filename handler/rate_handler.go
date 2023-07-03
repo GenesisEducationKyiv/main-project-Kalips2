@@ -2,9 +2,9 @@ package handler
 
 import (
 	"btc-app/config"
+	"btc-app/model"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 type RateHandlerImpl struct {
@@ -13,23 +13,22 @@ type RateHandlerImpl struct {
 }
 
 type RateService interface {
-	GetCurrentRate() (float64, error)
+	GetRate() (*model.Rate, error)
 }
 
 func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if rate, err := rateHr.rateService.GetCurrentRate(); err != nil {
+		if rate, err := rateHr.rateService.GetRate(); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
-			rateStr := strconv.FormatFloat(rate, 'f', 5, 64)
-			fmt.Fprint(w, rateStr)
+			fmt.Fprint(w, rate.ToString())
 		}
 	}
 }
 
 func NewRateHandler(c *config.Config, rateService RateService) *RateHandlerImpl {
 	return &RateHandlerImpl{
-		rateService: rateService,
 		conf:        c,
+		rateService: rateService,
 	}
 }

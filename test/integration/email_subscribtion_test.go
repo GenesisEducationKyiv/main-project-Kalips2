@@ -2,46 +2,48 @@ package integration
 
 import (
 	"btc-app/config"
+	"btc-app/model"
 	"btc-app/repository"
 	"btc-app/service"
 	"btc-app/template/exception"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
+	"strconv"
 	"testing"
 )
 
 var (
 	pathToStorage            = "subscriptions-test.csv"
-	permToOpenTheTestStorage = 0644
+	permToOpenTheTestStorage = "0644"
 )
 
 func TestSubscribeEmailSuccess(t *testing.T) {
 	resetStorageFile()
-	testEmail := "test@example.com"
+	testEmail := model.Email{Mail: "test@example.com"}
 	emailService := InitTestEmailService()
 
-	serviceError := emailService.SubscribeEmail(testEmail)
+	serviceError := emailService.SubscribeEmail(testEmail.Mail)
 
-	records, _ := repository.ReadFromStorage(pathToStorage)
+	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.NoError(t, serviceError)
-	assert.Equal(t, 1, countOfElementIn(testEmail, records))
+	assert.Equal(t, 1, countOfEmailsIn(testEmail, records))
 }
 
 func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
-	testEmail := "loremipsum@gmail.com"
+	testEmail := model.Email{Mail: "loremipsum@gmail.com"}
 	emailService := InitTestEmailService()
-	_ = repository.WriteToStorage(testEmail, pathToStorage, 0)
+	_ = repository.WriteEmailToStorage(testEmail, pathToStorage, permToOpenTheTestStorage)
 
-	serviceError := emailService.SubscribeEmail(testEmail)
+	serviceError := emailService.SubscribeEmail(testEmail.Mail)
 
-	records, _ := repository.ReadFromStorage(pathToStorage)
+	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.Error(t, serviceError, exception.ErrEmailIsAlreadySubscribed)
-	assert.Equal(t, 1, countOfElementIn(testEmail, records))
+	assert.Equal(t, 1, countOfEmailsIn(testEmail, records))
 }
 
-func countOfElementIn(element string, in []string) int {
+func countOfEmailsIn(element model.Email, in []model.Email) int {
 	count := 0
 	for _, record := range in {
 		if record == element {
@@ -53,15 +55,19 @@ func countOfElementIn(element string, in []string) int {
 
 func resetStorageFile() {
 	emptyJSONArray := []byte("[]")
-	if err := os.WriteFile(pathToStorage, emptyJSONArray, os.FileMode(permToOpenTheTestStorage)); err != nil {
+	permission, _ := strconv.ParseInt(permToOpenTheTestStorage, 0, 32)
+	if err := os.WriteFile(pathToStorage, emptyJSONArray, os.FileMode(permission)); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func InitTestEmailService() *service.EmailServiceImpl {
-	c := &config.Config{EmailStoragePath: pathToStorage}
-	emailRepository := repository.NewEmailRepository(c.EmailStoragePath)
-	emailSender := service.NewEmailSender(c)
-	rateService := service.NewRateService(c)
-	return service.NewEmailService(c, rateService, emailRepository, emailSender)
+	databaseConfig := config.DatabaseConfig{PathToStorage: "subscriptions-test.csv", PermissionToStorage: "0644"}
+	cryptoConfig := config.CryptoConfig{}
+	mailConfig := config.MailConfig{}
+
+	emailRepository := repository.NewEmailRepository(databaseConfig)
+	emailSender := service.NewEmailSender(mailConfig)
+	rateService := service.NewRateService(cryptoConfig, service.NewChainOfProviders(cryptoConfig))
+	return service.NewEmailService(cryptoConfig, rateService, emailRepository, emailSender)
 }

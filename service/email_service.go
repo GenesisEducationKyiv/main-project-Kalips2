@@ -13,24 +13,24 @@ import (
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 type EmailServiceImpl struct {
-	conf            *config.Config
+	conf            config.CryptoConfig
 	rateService     handler.RateService
 	emailRepository EmailRepository
 	emailSender     GoMailSender
 }
 
 type EmailRepository interface {
-	SaveEmailToStorage(email string) error
-	GetEmailsFromStorage() ([]string, error)
-	CheckEmailIsExist(email string) (bool, error)
+	SaveEmail(email model.Email) error
+	GetEmailsFromStorage() ([]model.Email, error)
+	CheckEmailIsExist(email model.Email) (bool, error)
 }
 
 type GoMailSender interface {
-	SendMessageTo(message *model.Message, recipients []string) error
+	SendMessageTo(message *model.Message, recipients []model.Email) error
 }
 
 func (emailService *EmailServiceImpl) SendRateToEmails() error {
-	var emails []string
+	var emails []model.Email
 	var err error
 	conf := emailService.conf
 
@@ -39,12 +39,12 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
 
-	rate, err := emailService.rateService.GetCurrentRate()
+	rate, err := emailService.rateService.GetRate()
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
 
-	msg := model.NewRateMessage(rate, conf.EmailServiceFrom, conf.CurrencyFrom, conf.CurrencyTo)
+	msg := model.NewRateMessage(rate, conf.CurrencyFrom, conf.CurrencyTo)
 	err = emailService.emailSender.SendMessageTo(msg, emails)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
@@ -52,14 +52,15 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 	return err
 }
 
-func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
+func (emailService *EmailServiceImpl) SubscribeEmail(emailVal string) error {
 	var err error
 
-	err = validateEmail(email)
+	err = validateEmail(emailVal)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
 
+	email := model.Email{Mail: emailVal}
 	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
 		err = exception.ErrEmailIsAlreadySubscribed
@@ -68,7 +69,7 @@ func (emailService *EmailServiceImpl) SubscribeEmail(email string) error {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
 
-	err = emailService.emailRepository.SaveEmailToStorage(email)
+	err = emailService.emailRepository.SaveEmail(email)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
@@ -83,7 +84,7 @@ func validateEmail(email string) error {
 	return err
 }
 
-func NewEmailService(c *config.Config, service handler.RateService, emailRepository EmailRepository, sender GoMailSender) *EmailServiceImpl {
+func NewEmailService(c config.CryptoConfig, service handler.RateService, emailRepository EmailRepository, sender GoMailSender) *EmailServiceImpl {
 	return &EmailServiceImpl{
 		conf:            c,
 		rateService:     service,
