@@ -25,7 +25,7 @@ type RateHandler interface {
 	GetCurrentRateHandler() http.HandlerFunc
 }
 
-func (s *Server) NewHandlers(c *config.Config) {
+func (s *Server) SetupServer(c *config.Config) {
 	emailRepository := repository.NewEmailRepository(c.Database)
 	emailSender := service.NewEmailSender(c.MailService)
 

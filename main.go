@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-	conf, err := config.NewConfig()
+	conf, err := config.NewConfig("config.json")
 	if err != nil {
 		log.Fatal("Failed to initialize configuration.", err)
 	}
 
 	var curServer = server.NewServer(conf)
-	curServer.NewHandlers(conf)
+	curServer.SetupServer(conf)
 }

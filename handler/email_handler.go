@@ -43,7 +43,7 @@ func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 
 func NewEmailHandler(c *config.Config, emailService EmailService) *EmailHandlerImpl {
 	return &EmailHandlerImpl{
-		emailService: emailService,
 		conf:         c,
+		emailService: emailService,
 	}
 }

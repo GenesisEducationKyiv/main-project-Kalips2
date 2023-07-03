@@ -44,7 +44,7 @@ func createConfig() *config.Config {
 	var err error
 	var c *config.Config
 
-	if c, err = config.NewConfig(); err != nil {
+	if c, err = config.NewConfig("config.json"); err != nil {
 		log.Fatal("Failed to initialize configuration.", err)
 	}
 	return c

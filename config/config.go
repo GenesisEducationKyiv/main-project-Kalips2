@@ -39,10 +39,10 @@ type (
 	}
 )
 
-func NewConfig() (*Config, error) {
+func NewConfig(pathToConfig string) (*Config, error) {
 	conf := &Config{}
 
-	data, err := os.ReadFile("config.json")
+	data, err := os.ReadFile(pathToConfig)
 	if err != nil {
 		return conf, err
 	}

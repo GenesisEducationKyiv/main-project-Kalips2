@@ -62,8 +62,7 @@ func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, currTo 
 	var resp *http.Response
 	rate := &model.Rate{}
 
-	url := fmt.Sprintf(prvUrl, currTo, currFrom)
-	if resp, err = http.Get(url); err != nil {
+	if resp, err = pr.sendGetRequestTo(fmt.Sprintf(prvUrl, currTo, currFrom)); err != nil {
 		log.Printf("Error during sending request to %s", pr.name)
 		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
@@ -73,6 +72,11 @@ func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, currTo 
 		return rate, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 	return rate, err
+}
+
+func (pr *CryptoProvider) sendGetRequestTo(url string) (resp *http.Response, err error) {
+	resp, err = http.Get(url)
+	return
 }
 
 func (pr *CryptoProvider) getRateFromHttpResponse(resp *http.Response, pathToRate string) (*model.Rate, error) {
@@ -89,7 +93,7 @@ func (pr *CryptoProvider) getRateFromHttpResponse(resp *http.Response, pathToRat
 		return &rate, errors.New("failed to get rate from response")
 	}
 
-	rate.SetValue(price.String())
+	err = rate.SetValue(price.String())
 	return &rate, err
 }
 

@@ -28,7 +28,7 @@ func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
 
 func NewRateHandler(c *config.Config, rateService RateService) *RateHandlerImpl {
 	return &RateHandlerImpl{
-		rateService: rateService,
 		conf:        c,
+		rateService: rateService,
 	}
 }
