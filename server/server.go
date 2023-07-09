@@ -2,9 +2,11 @@ package server
 
 import (
 	"btc-app/config"
-	"btc-app/handler"
-	"btc-app/repository"
-	"btc-app/service"
+	"btc-app/pkg/application"
+	"btc-app/pkg/infrastructure/provider"
+	"btc-app/pkg/infrastructure/repository"
+	"btc-app/pkg/infrastructure/sender"
+	"btc-app/pkg/presentation/handler"
 	"fmt"
 	"github.com/go-chi/chi"
 	"log"
@@ -27,10 +29,10 @@ type RateHandler interface {
 
 func (s *Server) SetupServer(c *config.Config) {
 	emailRepository := repository.NewEmailRepository(c.Database)
-	emailSender := service.NewEmailSender(c.MailService)
+	emailSender := sender.NewEmailSender(c.MailService)
 
-	rateService := service.NewRateService(c.Crypto, service.NewChainOfProviders(c.Crypto))
-	emailService := service.NewEmailService(c.Crypto, rateService, emailRepository, emailSender)
+	rateService := application.NewRateService(c.Crypto, provider.NewChainOfProviders(c.Crypto))
+	emailService := application.NewEmailService(c.Crypto, rateService, emailRepository, emailSender)
 
 	rateHandler := handler.NewRateHandler(c, rateService)
 	emailHandler := handler.NewEmailHandler(c, emailService)

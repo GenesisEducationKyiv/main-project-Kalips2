@@ -1,8 +1,8 @@
-package service
+package sender
 
 import (
 	"btc-app/config"
-	"btc-app/model"
+	"btc-app/pkg/domain"
 	"crypto/tls"
 	"github.com/go-gomail/gomail"
 	"github.com/pkg/errors"
@@ -13,7 +13,7 @@ type GoMailSenderImpl struct {
 	dialer *gomail.Dialer
 }
 
-func (sender *GoMailSenderImpl) createMailMessage(message *model.Message, mailFrom string) *gomail.Message {
+func (sender *GoMailSenderImpl) createMailMessage(message *domain.EmailMessage, mailFrom string) *gomail.Message {
 	mailMsg := gomail.NewMessage()
 	mailMsg.SetHeader("From", mailFrom)
 	mailMsg.SetHeader("Subject", message.Header)
@@ -21,15 +21,15 @@ func (sender *GoMailSenderImpl) createMailMessage(message *model.Message, mailFr
 	return mailMsg
 }
 
-func (sender *GoMailSenderImpl) SendMessageTo(message *model.Message, recipients []model.Email) error {
+func (sender *GoMailSenderImpl) SendMessageTo(message *domain.EmailMessage, recipients []domain.Email) error {
 	var err error
 	var failedEmails []string
 
 	mailMsg := sender.createMailMessage(message, sender.dialer.Username)
 	for _, email := range recipients {
-		mailMsg.SetHeader("To", email.Mail)
+		mailMsg.SetHeader("To", email.GetAddress())
 		if err = sender.dialer.DialAndSend(mailMsg); err != nil {
-			failedEmails = append(failedEmails, email.Mail)
+			failedEmails = append(failedEmails, email.GetAddress())
 		}
 	}
 	return errors.Wrap(err, "Failed to send emails to: "+strings.Join(failedEmails, ", "))

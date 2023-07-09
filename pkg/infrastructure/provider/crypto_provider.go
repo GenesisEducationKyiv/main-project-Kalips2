@@ -1,8 +1,9 @@
-package service
+package provider
 
 import (
 	"btc-app/config"
-	"btc-app/model"
+	"btc-app/pkg/application"
+	"btc-app/pkg/domain"
 	"btc-app/template/message"
 	"fmt"
 	"github.com/pkg/errors"
@@ -10,6 +11,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type (
@@ -17,29 +19,24 @@ type (
 		name       string
 		URL        string
 		pathToRate string
-		next       CryptoChain
-	}
-
-	CryptoChain interface {
-		GetRate(currFrom string, currTo string) (*model.Rate, error)
-		SetNext(chain CryptoChain)
+		next       application.ProvidersChain
 	}
 )
 
-func (pr *CryptoProvider) SetNext(next CryptoChain) {
+func (pr *CryptoProvider) SetNext(next application.ProvidersChain) {
 	pr.next = next
 }
 
-func (pr *CryptoProvider) GetRate(currFrom string, currTo string) (*model.Rate, error) {
+func (pr *CryptoProvider) GetRate(curPair domain.CurrencyPair) (*domain.CurrencyRate, error) {
 	var err error
-	rate, err := pr.getRateByURL(pr.URL, pr.pathToRate, currFrom, currTo)
+	rate, err := pr.getRateByURL(pr.URL, pr.pathToRate, curPair)
 	if err != nil && pr.next != nil {
-		rate, err = pr.next.GetRate(currFrom, currTo)
+		rate, err = pr.next.GetRate(curPair)
 	}
 	return rate, err
 }
 
-func NewCryptoProvider(name string, providerURL string, pathToRate string) CryptoChain {
+func NewCryptoProvider(name string, providerURL string, pathToRate string) application.ProvidersChain {
 	return &CryptoProvider{
 		name:       name,
 		URL:        providerURL,
@@ -47,7 +44,7 @@ func NewCryptoProvider(name string, providerURL string, pathToRate string) Crypt
 	}
 }
 
-func NewChainOfProviders(c config.CryptoConfig) CryptoChain {
+func NewChainOfProviders(c config.CryptoConfig) application.ProvidersChain {
 	cryptoCompareProvider := NewCryptoProvider("Crypto Compare", c.CryptoCompareProviderURL, c.CurrencyTo)
 	coinMarketProvider := NewCryptoProvider("Coin Market", c.CoinMarketProviderURL, fmt.Sprintf("data.%s.quote.%s.price", c.CurrencyFrom, c.CurrencyTo))
 	coinApiProvider := NewCryptoProvider("Coin Api", c.CoinApiProviderURL, "rate")
@@ -57,21 +54,21 @@ func NewChainOfProviders(c config.CryptoConfig) CryptoChain {
 	return cryptoCompareProvider
 }
 
-func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, currTo string, currFrom string) (*model.Rate, error) {
+func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, curPair domain.CurrencyPair) (*domain.CurrencyRate, error) {
 	var err error
 	var resp *http.Response
-	rate := &model.Rate{}
 
-	if resp, err = pr.sendGetRequestTo(fmt.Sprintf(prvUrl, currTo, currFrom)); err != nil {
+	if resp, err = pr.sendGetRequestTo(fmt.Sprintf(prvUrl, curPair.GetQuote(), curPair.GetBase())); err != nil {
 		log.Printf("Error during sending request to %s", pr.name)
-		return rate, errors.Wrap(err, message.FailToGetRateMessage)
+		return nil, errors.Wrap(err, message.FailToGetRateMessage)
 	}
 
-	if rate, err = pr.getRateFromHttpResponse(resp, pathToRate); err != nil {
+	rate, err := pr.getRateFromHttpResponse(resp, pathToRate)
+	if err != nil {
 		log.Printf("Error during parsing response from %s", pr.name)
-		return rate, errors.Wrap(err, message.FailToGetRateMessage)
+		return nil, errors.Wrap(err, message.FailToGetRateMessage)
 	}
-	return rate, err
+	return domain.NewCurrencyRate(curPair, rate), err
 }
 
 func (pr *CryptoProvider) sendGetRequestTo(url string) (resp *http.Response, err error) {
@@ -79,22 +76,22 @@ func (pr *CryptoProvider) sendGetRequestTo(url string) (resp *http.Response, err
 	return
 }
 
-func (pr *CryptoProvider) getRateFromHttpResponse(resp *http.Response, pathToRate string) (*model.Rate, error) {
+func (pr *CryptoProvider) getRateFromHttpResponse(resp *http.Response, pathToRate string) (float64, error) {
 	var err error
-	rate := model.Rate{}
+	var rate float64
 
 	body, err := pr.getBytesFromResponse(resp)
 	if err != nil {
-		return &rate, err
+		return rate, err
 	}
 
 	price := gjson.GetBytes(body, pathToRate)
 	if !price.Exists() {
-		return &rate, errors.New("failed to get rate from response")
+		return rate, errors.New("failed to get rate from response")
 	}
 
-	err = rate.SetValue(price.String())
-	return &rate, err
+	rate, err = strconv.ParseFloat(price.String(), 64)
+	return rate, err
 }
 
 func (pr *CryptoProvider) getBytesFromResponse(resp *http.Response) ([]byte, error) {
