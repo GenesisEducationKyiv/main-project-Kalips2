@@ -1,10 +1,10 @@
-package service
+package application
 
 import (
 	"btc-app/config"
-	"btc-app/handler"
-	"btc-app/model"
-	"btc-app/template/exception"
+	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
+	cerror "btc-app/template/cerror"
 	"btc-app/template/message"
 	"github.com/pkg/errors"
 	"regexp"
@@ -12,22 +12,24 @@ import (
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
-type EmailServiceImpl struct {
-	conf            config.CryptoConfig
-	rateService     handler.RateService
-	emailRepository EmailRepository
-	emailSender     GoMailSender
-}
+type (
+	EmailServiceImpl struct {
+		conf            config.CryptoConfig
+		rateService     service.RateService
+		emailRepository EmailRepository
+		emailSender     GoMailSender
+	}
 
-type EmailRepository interface {
-	SaveEmail(email model.Email) error
-	GetEmailsFromStorage() ([]model.Email, error)
-	CheckEmailIsExist(email model.Email) (bool, error)
-}
+	EmailRepository interface {
+		SaveEmail(email model.Email) error
+		GetEmailsFromStorage() ([]model.Email, error)
+		CheckEmailIsExist(email model.Email) (bool, error)
+	}
 
-type GoMailSender interface {
-	SendMessageTo(message *model.Message, recipients []model.Email) error
-}
+	GoMailSender interface {
+		SendMessageTo(message *model.EmailMessage, recipients []model.Email) error
+	}
+)
 
 func (emailService *EmailServiceImpl) SendRateToEmails() error {
 	var emails []model.Email
@@ -39,7 +41,8 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
 
-	rate, err := emailService.rateService.GetRate()
+	curPair := model.NewCurrencyPair(emailService.conf.CurrencyTo, emailService.conf.CurrencyFrom)
+	rate, err := emailService.rateService.GetRate(*curPair)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
@@ -52,18 +55,17 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 	return err
 }
 
-func (emailService *EmailServiceImpl) SubscribeEmail(emailVal string) error {
+func (emailService *EmailServiceImpl) SubscribeEmail(email model.Email) error {
 	var err error
 
-	err = validateEmail(emailVal)
+	err = validateEmail(email)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
 	}
 
-	email := model.Email{Mail: emailVal}
 	exist, err := emailService.emailRepository.CheckEmailIsExist(email)
 	if exist {
-		err = exception.ErrEmailIsAlreadySubscribed
+		err = cerror.ErrEmailIsAlreadySubscribed
 	}
 	if err != nil {
 		return errors.Wrap(err, message.FailToSubscribeMessage)
@@ -76,18 +78,18 @@ func (emailService *EmailServiceImpl) SubscribeEmail(emailVal string) error {
 	return err
 }
 
-func validateEmail(email string) error {
+func validateEmail(email model.Email) error {
 	var err error
-	if !emailRegex.MatchString(email) {
+	if !emailRegex.MatchString(email.GetAddress()) {
 		err = errors.New("Email doesn't match regex: " + emailRegex.String())
 	}
 	return err
 }
 
-func NewEmailService(c config.CryptoConfig, service handler.RateService, emailRepository EmailRepository, sender GoMailSender) *EmailServiceImpl {
+func NewEmailService(c config.CryptoConfig, rateService service.RateService, emailRepository EmailRepository, sender GoMailSender) *EmailServiceImpl {
 	return &EmailServiceImpl{
 		conf:            c,
-		rateService:     service,
+		rateService:     rateService,
 		emailRepository: emailRepository,
 		emailSender:     sender,
 	}

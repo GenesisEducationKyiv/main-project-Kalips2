@@ -1,7 +1,7 @@
 package repository_mock
 
 import (
-	"btc-app/model"
+	"btc-app/pkg/domain/model"
 	"github.com/stretchr/testify/mock"
 )
 

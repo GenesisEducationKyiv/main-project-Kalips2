@@ -2,7 +2,7 @@ package main
 
 import (
 	"btc-app/config"
-	"btc-app/server"
+	"btc-app/pkg/presentation/server"
 	"log"
 )
 
@@ -12,6 +12,6 @@ func main() {
 		log.Fatal("Failed to initialize configuration.", err)
 	}
 
-	var curServer = server.NewServer(conf)
+	curServer := server.NewServer(conf)
 	curServer.SetupServer(conf)
 }

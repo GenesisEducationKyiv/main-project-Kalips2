@@ -2,46 +2,39 @@ package handler
 
 import (
 	"btc-app/config"
-	"btc-app/template/message"
-	"fmt"
+	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
+	"btc-app/pkg/presentation/presenter"
 	"net/http"
 )
 
 type EmailHandlerImpl struct {
 	conf         *config.Config
-	emailService EmailService
-}
-
-type EmailService interface {
-	SendRateToEmails() error
-	SubscribeEmail(emailVal string) error
+	emailService service.EmailService
 }
 
 func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := emailHr.emailService.SendRateToEmails(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			presenter.PresentErrorByInternalServerError(w, err)
 		} else {
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, message.EmailsWereSent)
+			presenter.PresentString(w, "Emails have been sent.")
 		}
 	}
 }
 
 func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		email := r.FormValue("email")
-
+		email := model.NewEmail(r.FormValue("email"))
 		if err := emailHr.emailService.SubscribeEmail(email); err != nil {
-			http.Error(w, err.Error(), http.StatusConflict)
+			presenter.PresentErrorByConflict(w, err)
 		} else {
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, message.EmailSubscribed)
+			presenter.PresentString(w, "Emails have been subscribed.")
 		}
 	}
 }
 
-func NewEmailHandler(c *config.Config, emailService EmailService) *EmailHandlerImpl {
+func NewEmailHandler(c *config.Config, emailService service.EmailService) *EmailHandlerImpl {
 	return &EmailHandlerImpl{
 		conf:         c,
 		emailService: emailService,

@@ -2,9 +2,10 @@ package email
 
 import (
 	"btc-app/config"
-	"btc-app/handler"
-	"btc-app/service"
-	"btc-app/template/exception"
+	"btc-app/pkg/application"
+	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
+	"btc-app/template/cerror"
 	"btc-app/test/unit/repository_mock"
 	serviceTest "btc-app/test/unit/service_mock"
 	"github.com/stretchr/testify/assert"
@@ -12,9 +13,9 @@ import (
 )
 
 type EmailSubscriptionTestInfo struct {
-	testEmail    string
+	testEmail    model.Email
 	emailRepo    *repository_mock.MockEmailRepository
-	emailService handler.EmailService
+	emailService service.EmailService
 }
 
 var emailInfo *EmailSubscriptionTestInfo
@@ -41,7 +42,7 @@ func TestSubscribeEmailFailed(t *testing.T) {
 
 	err := emailService.SubscribeEmail(testEmail)
 
-	assert.Error(t, err, exception.ErrEmailIsAlreadySubscribed)
+	assert.Error(t, err, error.ErrEmailIsAlreadySubscribed)
 	repo.AssertCalled(t, "CheckEmailIsExist", testEmail)
 	repo.AssertNotCalled(t, "SaveEmail", testEmail)
 }
@@ -50,14 +51,14 @@ func setUpEmailTest() *EmailSubscriptionTestInfo {
 	emailRepo := &repository_mock.MockEmailRepository{}
 	emailSender := &serviceTest.MockGoMailSender{}
 	rateService := &serviceTest.MockRateService{}
-	emailService := service.NewEmailService(config.CryptoConfig{}, rateService, emailRepo, emailSender)
+	emailService := application.NewEmailService(config.CryptoConfig{}, rateService, emailRepo, emailSender)
 	return &EmailSubscriptionTestInfo{
-		testEmail:    "testEmail@gmail.com",
+		testEmail:    model.NewEmail("testEmail@gmail.com"),
 		emailRepo:    emailRepo,
 		emailService: emailService,
 	}
 }
 
-func getComponents(emailInfo *EmailSubscriptionTestInfo) (string, *repository_mock.MockEmailRepository, handler.EmailService) {
+func getComponents(emailInfo *EmailSubscriptionTestInfo) (model.Email, *repository_mock.MockEmailRepository, service.EmailService) {
 	return emailInfo.testEmail, emailInfo.emailRepo, emailInfo.emailService
 }

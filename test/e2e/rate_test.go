@@ -1,9 +1,10 @@
-package functional
+package e2e
 
 import (
 	"btc-app/config"
-	"btc-app/handler"
-	"btc-app/service"
+	"btc-app/pkg/application"
+	"btc-app/pkg/infrastructure/provider"
+	"btc-app/pkg/presentation/handler"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
@@ -36,7 +37,7 @@ func TestGetRate(t *testing.T) {
 
 func InitTestRateHandler() *handler.RateHandlerImpl {
 	conf := createConfig()
-	rateService := service.NewRateService(conf.Crypto, service.NewChainOfProviders(conf.Crypto))
+	rateService := application.NewRateService(conf.Crypto, provider.NewChainOfProviders(conf.Crypto))
 	return handler.NewRateHandler(conf, rateService)
 }
 
