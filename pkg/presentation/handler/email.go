@@ -2,14 +2,15 @@ package handler
 
 import (
 	"btc-app/config"
-	"btc-app/pkg/application"
+	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
 	"btc-app/pkg/presentation/presenter"
 	"net/http"
 )
 
 type EmailHandlerImpl struct {
 	conf         *config.Config
-	emailService application.EmailService
+	emailService service.EmailService
 }
 
 func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
@@ -24,8 +25,7 @@ func (emailHr *EmailHandlerImpl) SendToEmailsHandler() http.HandlerFunc {
 
 func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		email := r.FormValue("email")
-
+		email := model.NewEmail(r.FormValue("email"))
 		if err := emailHr.emailService.SubscribeEmail(email); err != nil {
 			presenter.PresentErrorByConflict(w, err)
 		} else {
@@ -34,7 +34,7 @@ func (emailHr *EmailHandlerImpl) SubscribeEmailHandler() http.HandlerFunc {
 	}
 }
 
-func NewEmailHandler(c *config.Config, emailService application.EmailService) *EmailHandlerImpl {
+func NewEmailHandler(c *config.Config, emailService service.EmailService) *EmailHandlerImpl {
 	return &EmailHandlerImpl{
 		conf:         c,
 		emailService: emailService,

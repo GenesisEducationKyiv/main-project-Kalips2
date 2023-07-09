@@ -2,7 +2,7 @@ package sender
 
 import (
 	"btc-app/config"
-	"btc-app/pkg/domain"
+	"btc-app/pkg/domain/model"
 	"crypto/tls"
 	"github.com/go-gomail/gomail"
 	"github.com/pkg/errors"
@@ -13,7 +13,7 @@ type GoMailSenderImpl struct {
 	dialer *gomail.Dialer
 }
 
-func (sender *GoMailSenderImpl) createMailMessage(message *domain.EmailMessage, mailFrom string) *gomail.Message {
+func (sender *GoMailSenderImpl) createMailMessage(message *model.EmailMessage, mailFrom string) *gomail.Message {
 	mailMsg := gomail.NewMessage()
 	mailMsg.SetHeader("From", mailFrom)
 	mailMsg.SetHeader("Subject", message.Header)
@@ -21,7 +21,7 @@ func (sender *GoMailSenderImpl) createMailMessage(message *domain.EmailMessage, 
 	return mailMsg
 }
 
-func (sender *GoMailSenderImpl) SendMessageTo(message *domain.EmailMessage, recipients []domain.Email) error {
+func (sender *GoMailSenderImpl) SendMessageTo(message *model.EmailMessage, recipients []model.Email) error {
 	var err error
 	var failedEmails []string
 

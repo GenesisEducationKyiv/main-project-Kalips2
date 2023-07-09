@@ -6,20 +6,28 @@ import (
 )
 
 func TestDomainLayer(t *testing.T) {
-	layers := append(applicationLayer, presenterLayer...)
-	layers = append(layers, infrastructureLayer...)
-	archtest.Package(t, domainLayer...).ShouldNotDependOn(layers...)
+	t.Run("Domain layer should not depend on Application, Presenter, Infrastructure layers.", func(t *testing.T) {
+		layers := append(applicationLayer, presenterLayer...)
+		layers = append(layers, infrastructureLayer...)
+		archtest.Package(t, domainLayer...).ShouldNotDependOn(layers...)
+	})
 }
 
 func TestApplicationLayer(t *testing.T) {
-	layers := append(infrastructureLayer, presenterLayer...)
-	archtest.Package(t, application).ShouldNotDependOn(layers...)
+	t.Run("Application layer should not depend on Presenter, Infrastructure layers.", func(t *testing.T) {
+		layers := append(infrastructureLayer, presenterLayer...)
+		archtest.Package(t, application).ShouldNotDependOn(layers...)
+	})
 }
 
 func TestPresenterLayer(t *testing.T) {
-	archtest.Package(t, presenterLayer...).ShouldNotDependOn(infrastructureLayer...)
+	t.Run("Presenter layer should not depend on Infrastructure layer.", func(t *testing.T) {
+		archtest.Package(t, presenterLayer...).ShouldNotDependOn(infrastructureLayer...)
+	})
 }
 
 func TestInfrastructureLayer(t *testing.T) {
-	archtest.Package(t, infrastructureLayer...).ShouldNotDependOn(presenterLayer...)
+	t.Run("Infrastructure layer should not depend on Presenter layer.", func(t *testing.T) {
+		archtest.Package(t, infrastructureLayer...).ShouldNotDependOn(presenterLayer...)
+	})
 }

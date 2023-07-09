@@ -2,7 +2,7 @@ package application
 
 import (
 	"btc-app/config"
-	"btc-app/pkg/domain"
+	"btc-app/pkg/domain/model"
 	"btc-app/template/message"
 	"github.com/pkg/errors"
 )
@@ -14,14 +14,14 @@ type (
 	}
 
 	ProvidersChain interface {
-		GetRate(curPair domain.CurrencyPair) (*domain.CurrencyRate, error)
+		GetRate(curPair model.CurrencyPair) (*model.CurrencyRate, error)
 		SetNext(nextProvider ProvidersChain)
 	}
 )
 
-func (service RateServiceImpl) GetRate(curPair domain.CurrencyPair) (*domain.CurrencyRate, error) {
+func (service RateServiceImpl) GetRate(curPair model.CurrencyPair) (*model.CurrencyRate, error) {
 	var err error
-	var rate *domain.CurrencyRate
+	var rate *model.CurrencyRate
 
 	if rate, err = service.rateProvider.GetRate(curPair); err != nil {
 		return rate, errors.Wrap(err, message.FailToGetRateMessage)

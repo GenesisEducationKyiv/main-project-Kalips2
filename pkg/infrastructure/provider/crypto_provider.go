@@ -3,7 +3,7 @@ package provider
 import (
 	"btc-app/config"
 	"btc-app/pkg/application"
-	"btc-app/pkg/domain"
+	"btc-app/pkg/domain/model"
 	"btc-app/template/message"
 	"fmt"
 	"github.com/pkg/errors"
@@ -27,7 +27,7 @@ func (pr *CryptoProvider) SetNext(next application.ProvidersChain) {
 	pr.next = next
 }
 
-func (pr *CryptoProvider) GetRate(curPair domain.CurrencyPair) (*domain.CurrencyRate, error) {
+func (pr *CryptoProvider) GetRate(curPair model.CurrencyPair) (*model.CurrencyRate, error) {
 	var err error
 	rate, err := pr.getRateByURL(pr.URL, pr.pathToRate, curPair)
 	if err != nil && pr.next != nil {
@@ -54,7 +54,7 @@ func NewChainOfProviders(c config.CryptoConfig) application.ProvidersChain {
 	return cryptoCompareProvider
 }
 
-func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, curPair domain.CurrencyPair) (*domain.CurrencyRate, error) {
+func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, curPair model.CurrencyPair) (*model.CurrencyRate, error) {
 	var err error
 	var resp *http.Response
 
@@ -68,7 +68,7 @@ func (pr *CryptoProvider) getRateByURL(prvUrl string, pathToRate string, curPair
 		log.Printf("Error during parsing response from %s", pr.name)
 		return nil, errors.Wrap(err, message.FailToGetRateMessage)
 	}
-	return domain.NewCurrencyRate(curPair, rate), err
+	return model.NewCurrencyRate(curPair, rate), err
 }
 
 func (pr *CryptoProvider) sendGetRequestTo(url string) (resp *http.Response, err error) {

@@ -3,7 +3,8 @@ package rate
 import (
 	"btc-app/config"
 	"btc-app/pkg/application"
-	domain2 "btc-app/pkg/domain"
+	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
 	"btc-app/test/unit/service_mock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 type RateTestInfo struct {
 	rateProvider *service_mock.MockCryptoProvider
 	cryptoConfig config.CryptoConfig
-	rateService  application.RateService
+	rateService  service.RateService
 }
 
 var rateInfo *RateTestInfo
@@ -24,8 +25,8 @@ func TestMain(t *testing.M) {
 
 func TestGetRateSuccessful(t *testing.T) {
 	rateProvider, cryptoConfig, rateService := getComponents(rateInfo)
-	curPair := domain2.NewCurrencyPair(cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo)
-	expRate := domain2.NewCurrencyRate(*curPair, 999.876)
+	curPair := model.NewCurrencyPair(cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo)
+	expRate := model.NewCurrencyRate(*curPair, 999.876)
 	rateProvider.On("GetRate", curPair).Return(expRate, nil)
 
 	rate, err := rateService.GetRate(*curPair)
@@ -37,7 +38,7 @@ func TestGetRateSuccessful(t *testing.T) {
 
 func TestGetRateFailed(t *testing.T) {
 	rateProvider, cryptoConfig, rateService := getComponents(rateInfo)
-	curPair := domain2.NewCurrencyPair(cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo)
+	curPair := model.NewCurrencyPair(cryptoConfig.CurrencyFrom, cryptoConfig.CurrencyTo)
 	expErr := errors.New("failed to get rate from response")
 	rateProvider.On("GetRate", curPair).Return(nil, expErr)
 
@@ -48,7 +49,7 @@ func TestGetRateFailed(t *testing.T) {
 	rateProvider.AssertNumberOfCalls(t, "GetRate", 1)
 }
 
-func getComponents(info *RateTestInfo) (*service_mock.MockCryptoProvider, config.CryptoConfig, application.RateService) {
+func getComponents(info *RateTestInfo) (*service_mock.MockCryptoProvider, config.CryptoConfig, service.RateService) {
 	return info.rateProvider, info.cryptoConfig, info.rateService
 }
 

@@ -1,12 +1,12 @@
 package presenter
 
 import (
-	"btc-app/pkg/domain"
+	"btc-app/pkg/domain/model"
 	"fmt"
 	"net/http"
 )
 
-func PresentRate(w http.ResponseWriter, rate *domain.CurrencyRate) {
+func PresentRate(w http.ResponseWriter, rate *model.CurrencyRate) {
 	fmt.Fprint(w, rate.ToString())
 }
 

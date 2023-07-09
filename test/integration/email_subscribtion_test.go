@@ -3,7 +3,7 @@ package integration
 import (
 	"btc-app/config"
 	"btc-app/pkg/application"
-	"btc-app/pkg/domain"
+	"btc-app/pkg/domain/model"
 	"btc-app/pkg/infrastructure/provider"
 	"btc-app/pkg/infrastructure/repository"
 	"btc-app/pkg/infrastructure/sender"
@@ -22,10 +22,10 @@ var (
 
 func TestSubscribeEmailSuccess(t *testing.T) {
 	resetStorageFile()
-	testEmail := domain.NewEmail("test@example.com")
+	testEmail := model.NewEmail("test@example.com")
 	emailService := InitTestEmailService()
 
-	serviceError := emailService.SubscribeEmail(testEmail.GetAddress())
+	serviceError := emailService.SubscribeEmail(testEmail)
 
 	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.NoError(t, serviceError)
@@ -34,18 +34,18 @@ func TestSubscribeEmailSuccess(t *testing.T) {
 
 func TestSubscribeEmailFailed(t *testing.T) {
 	resetStorageFile()
-	testEmail := domain.NewEmail("loremipsum@gmail.com")
+	testEmail := model.NewEmail("loremipsum@gmail.com")
 	emailService := InitTestEmailService()
 	_ = repository.WriteEmailToStorage(testEmail, pathToStorage, permToOpenTheTestStorage)
 
-	serviceError := emailService.SubscribeEmail(testEmail.GetAddress())
+	serviceError := emailService.SubscribeEmail(testEmail)
 
 	records, _ := repository.ReadEmailsFromStorage(pathToStorage)
 	assert.Error(t, serviceError, error.ErrEmailIsAlreadySubscribed)
 	assert.Equal(t, 1, countOfEmailsIn(testEmail, records))
 }
 
-func countOfEmailsIn(element domain.Email, in []domain.Email) int {
+func countOfEmailsIn(element model.Email, in []model.Email) int {
 	count := 0
 	for _, record := range in {
 		if record.GetAddress() == element.GetAddress() {

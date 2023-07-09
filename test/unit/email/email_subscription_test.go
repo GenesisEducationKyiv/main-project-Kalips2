@@ -3,6 +3,8 @@ package email
 import (
 	"btc-app/config"
 	"btc-app/pkg/application"
+	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
 	"btc-app/template/cerror"
 	"btc-app/test/unit/repository_mock"
 	serviceTest "btc-app/test/unit/service_mock"
@@ -11,9 +13,9 @@ import (
 )
 
 type EmailSubscriptionTestInfo struct {
-	testEmail    string
+	testEmail    model.Email
 	emailRepo    *repository_mock.MockEmailRepository
-	emailService application.EmailService
+	emailService service.EmailService
 }
 
 var emailInfo *EmailSubscriptionTestInfo
@@ -51,12 +53,12 @@ func setUpEmailTest() *EmailSubscriptionTestInfo {
 	rateService := &serviceTest.MockRateService{}
 	emailService := application.NewEmailService(config.CryptoConfig{}, rateService, emailRepo, emailSender)
 	return &EmailSubscriptionTestInfo{
-		testEmail:    "testEmail@gmail.com",
+		testEmail:    model.NewEmail("testEmail@gmail.com"),
 		emailRepo:    emailRepo,
 		emailService: emailService,
 	}
 }
 
-func getComponents(emailInfo *EmailSubscriptionTestInfo) (string, *repository_mock.MockEmailRepository, application.EmailService) {
+func getComponents(emailInfo *EmailSubscriptionTestInfo) (model.Email, *repository_mock.MockEmailRepository, service.EmailService) {
 	return emailInfo.testEmail, emailInfo.emailRepo, emailInfo.emailService
 }

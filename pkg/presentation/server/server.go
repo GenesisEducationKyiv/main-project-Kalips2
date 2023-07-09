@@ -30,8 +30,9 @@ type RateHandler interface {
 func (s *Server) SetupServer(c *config.Config) {
 	emailRepository := repository.NewEmailRepository(c.Database)
 	emailSender := sender.NewEmailSender(c.MailService)
+	providers := provider.NewChainOfProviders(c.Crypto)
 
-	rateService := application.NewRateService(c.Crypto, provider.NewChainOfProviders(c.Crypto))
+	rateService := application.NewRateService(c.Crypto, providers)
 	emailService := application.NewEmailService(c.Crypto, rateService, emailRepository, emailSender)
 
 	rateHandler := handler.NewRateHandler(c, rateService)
