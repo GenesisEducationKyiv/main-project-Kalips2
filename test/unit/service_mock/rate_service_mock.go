@@ -9,7 +9,7 @@ type MockRateService struct {
 	mock.Mock
 }
 
-func (m *MockRateService) GetRate(curPair model.CurrencyPair) (*model.CurrencyRate, error) {
+func (m *MockRateService) GetCurrencyRate(curPair model.CurrencyPair) (*model.CurrencyRate, error) {
 	result := m.Called(curPair)
 	return result.Get(0).(*model.CurrencyRate), result.Error(1)
 }

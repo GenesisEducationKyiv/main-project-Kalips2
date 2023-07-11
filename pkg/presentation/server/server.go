@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -30,9 +31,9 @@ type RateHandler interface {
 func (s *Server) SetupServer(c *config.Config) {
 	emailRepository := repository.NewEmailRepository(c.Database)
 	emailSender := sender.NewEmailSender(c.MailService)
-	providers := provider.NewChainOfProviders(c.Crypto)
 
-	rateService := application.NewRateService(c.Crypto, providers)
+	rateProvider := setupRateProvider(c)
+	rateService := application.NewRateService(c.Crypto, rateProvider)
 	emailService := application.NewEmailService(c.Crypto, rateService, emailRepository, emailSender)
 
 	rateHandler := handler.NewRateHandler(c, rateService)
@@ -45,6 +46,16 @@ func (s *Server) SetupServer(c *config.Config) {
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Server.Port), s.Router); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to listen and serve server on the port - %d", c.Server.Port), err)
 	}
+}
+
+func setupRateProvider(c *config.Config) *provider.CachedCryptoProvider {
+	chainOfProviders := provider.SetupChainOfProviders(c.Crypto)
+	cacheDuration, err := time.ParseDuration(c.Crypto.CacheDuration)
+	if err != nil {
+		log.Fatalf("Incorrect cache duration! Please check your configuration.")
+	}
+	cachedChainOfProviders := provider.NewCachedCryptoProvider(cacheDuration, chainOfProviders, provider.NewDefaultTimeProvider())
+	return cachedChainOfProviders
 }
 
 func NewServer(conf *config.Config) *Server {

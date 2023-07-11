@@ -37,7 +37,7 @@ func TestGetRate(t *testing.T) {
 
 func InitTestRateHandler() *handler.RateHandlerImpl {
 	conf := createConfig()
-	rateService := application.NewRateService(conf.Crypto, provider.NewChainOfProviders(conf.Crypto))
+	rateService := application.NewRateService(conf.Crypto, provider.SetupChainOfProviders(conf.Crypto))
 	return handler.NewRateHandler(conf, rateService)
 }
 

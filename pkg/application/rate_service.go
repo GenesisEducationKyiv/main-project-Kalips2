@@ -9,17 +9,16 @@ import (
 
 type (
 	RateServiceImpl struct {
-		rateProvider ProvidersChain
+		rateProvider RateProvider
 		conf         config.CryptoConfig
 	}
 
-	ProvidersChain interface {
+	RateProvider interface {
 		GetRate(curPair model.CurrencyPair) (*model.CurrencyRate, error)
-		SetNext(nextProvider ProvidersChain)
 	}
 )
 
-func (service RateServiceImpl) GetRate(curPair model.CurrencyPair) (*model.CurrencyRate, error) {
+func (service RateServiceImpl) GetCurrencyRate(curPair model.CurrencyPair) (*model.CurrencyRate, error) {
 	var err error
 	var rate *model.CurrencyRate
 
@@ -29,7 +28,7 @@ func (service RateServiceImpl) GetRate(curPair model.CurrencyPair) (*model.Curre
 	return rate, err
 }
 
-func NewRateService(c config.CryptoConfig, rateProvider ProvidersChain) *RateServiceImpl {
+func NewRateService(c config.CryptoConfig, rateProvider RateProvider) *RateServiceImpl {
 	return &RateServiceImpl{
 		conf:         c,
 		rateProvider: rateProvider,

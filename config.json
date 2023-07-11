@@ -7,7 +7,8 @@
     "coinMarketProvider": "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?CMC_PRO_API_KEY=4c743a6c-fe55-48ba-ad73-a04e9b2d5d30&aux=total_supply&symbol=%s&convert=%s",
     "coinApiProvider": "https://rest.coinapi.io/v1/exchangerate/APIKEY-49886103-922E-4C59-8872-465D54EAF910/%s/%s",
     "currencyFrom": "BTC",
-    "currencyTo": "UAH"
+    "currencyTo": "UAH",
+    "cacheDuration": "10s"
   },
   "database": {
     "pathToStorage": "subscriptions.csv",
