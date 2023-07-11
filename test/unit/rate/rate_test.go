@@ -29,7 +29,7 @@ func TestGetRateSuccessful(t *testing.T) {
 	expRate := model.NewCurrencyRate(*curPair, 999.876)
 	rateProvider.On("GetRate", curPair).Return(expRate, nil)
 
-	rate, err := rateService.GetRate(*curPair)
+	rate, err := rateService.GetCurrencyRate(*curPair)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expRate, rate)
@@ -42,7 +42,7 @@ func TestGetRateFailed(t *testing.T) {
 	expErr := errors.New("failed to get rate from response")
 	rateProvider.On("GetRate", curPair).Return(nil, expErr)
 
-	rate, err := rateService.GetRate(*curPair)
+	rate, err := rateService.GetCurrencyRate(*curPair)
 
 	assert.Error(t, expErr, err)
 	assert.Equal(t, nil, rate)

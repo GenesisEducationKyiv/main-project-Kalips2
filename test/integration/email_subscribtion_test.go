@@ -70,6 +70,6 @@ func InitTestEmailService() *application.EmailServiceImpl {
 
 	emailRepository := repository.NewEmailRepository(databaseConfig)
 	emailSender := sender.NewEmailSender(mailConfig)
-	rateService := application.NewRateService(cryptoConfig, provider.NewChainOfProviders(cryptoConfig))
+	rateService := application.NewRateService(cryptoConfig, provider.SetupChainOfProviders(cryptoConfig))
 	return application.NewEmailService(cryptoConfig, rateService, emailRepository, emailSender)
 }

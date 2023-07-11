@@ -16,7 +16,7 @@ type RateHandlerImpl struct {
 func (rateHr *RateHandlerImpl) GetCurrentRateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		curPair := model.NewCurrencyPair(rateHr.conf.Crypto.CurrencyTo, rateHr.conf.Crypto.CurrencyFrom)
-		if rate, err := rateHr.rateService.GetRate(*curPair); err != nil {
+		if rate, err := rateHr.rateService.GetCurrencyRate(*curPair); err != nil {
 			presenter.PresentErrorByBadRequest(w, err)
 		} else {
 			presenter.PresentRate(w, rate)

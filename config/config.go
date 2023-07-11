@@ -23,6 +23,7 @@ type (
 		CoinApiProviderURL       string `json:"coinApiProvider"`
 		CurrencyFrom             string `json:"currencyFrom"`
 		CurrencyTo               string `json:"currencyTo"`
+		CacheDuration            string `json:"cacheDuration"`
 	}
 
 	DatabaseConfig struct {

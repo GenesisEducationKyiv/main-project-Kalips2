@@ -1,8 +1,8 @@
 package service_mock
 
 import (
-	"btc-app/pkg/application"
 	"btc-app/pkg/domain/model"
+	"btc-app/pkg/infrastructure/provider"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -15,6 +15,7 @@ func (m *MockCryptoProvider) GetRate(curPair model.CurrencyPair) (*model.Currenc
 	return result.Get(0).(*model.CurrencyRate), result.Error(1)
 }
 
-func (m *MockCryptoProvider) SetNext(chain application.ProvidersChain) {
-	m.Called(chain)
+func (m *MockCryptoProvider) SetNext(next *provider.CryptoProvider) *provider.CryptoProvidersChainImpl {
+	result := m.Called(next)
+	return result.Get(0).(*provider.CryptoProvidersChainImpl)
 }

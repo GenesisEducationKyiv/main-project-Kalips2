@@ -42,7 +42,7 @@ func (emailService *EmailServiceImpl) SendRateToEmails() error {
 	}
 
 	curPair := model.NewCurrencyPair(emailService.conf.CurrencyTo, emailService.conf.CurrencyFrom)
-	rate, err := emailService.rateService.GetRate(*curPair)
+	rate, err := emailService.rateService.GetCurrencyRate(*curPair)
 	if err != nil {
 		return errors.Wrap(err, message.FailToSendRateMessage)
 	}
