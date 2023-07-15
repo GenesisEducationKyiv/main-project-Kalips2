@@ -3,6 +3,7 @@ package application
 import (
 	"btc-app/config"
 	"btc-app/pkg/domain/model"
+	"btc-app/pkg/domain/service"
 	"btc-app/template/message"
 	"github.com/pkg/errors"
 )
@@ -11,6 +12,7 @@ type (
 	RateServiceImpl struct {
 		rateProvider RateProvider
 		conf         config.CryptoConfig
+		logger       service.Logger
 	}
 
 	RateProvider interface {

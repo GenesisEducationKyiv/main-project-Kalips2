@@ -18,6 +18,7 @@ type (
 		rateService     service.RateService
 		emailRepository EmailRepository
 		emailSender     GoMailSender
+		logger          service.Logger
 	}
 
 	EmailRepository interface {
