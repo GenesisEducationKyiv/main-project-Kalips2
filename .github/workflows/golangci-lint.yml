@@ -43,5 +43,5 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Run test
         run: | 
-          cd producer/test
+          cd producer
           go test -v ./test/...
