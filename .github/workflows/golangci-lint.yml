@@ -25,6 +25,7 @@ jobs:
         with:
           version: v1.53
           args: --timeout=15m
+          working-directory: producer
 
   tests:
     name: Tests
@@ -41,4 +42,6 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Run test
-        run: go test -v ./test/...
+        run: | 
+          cd producer
+          go test -v ./test/...

@@ -25,4 +25,4 @@ docker build -t btc-app .
 docker run -p 8080:8080 btc-app
 ```
 ## Architecture
-![architecture diagram](doc/architecture.png)
+![architecture diagram](producer/doc/architecture.png)
